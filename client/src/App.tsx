@@ -89,11 +89,6 @@ export function App() {
     setPhase('setup');
   }, [activeId]);
 
-  // Reconnect
-  const handleReconnect = useCallback(() => {
-    setPhase('connecting');
-  }, []);
-
   // Disconnect — show account manager
   const handleDisconnect = useCallback(() => {
     setPhase('accounts');
@@ -128,8 +123,8 @@ export function App() {
     case 'password-prompt':
       return <PasswordPrompt onSubmit={handlePasswordEntered} />;
     case 'connecting':
-      return <ConnectingScreen onBack={handleGoToSetup} onReconnect={handleReconnect} />;
+      return <ConnectingScreen onBack={handleGoToSetup} />;
     case 'connected':
-      return <ChatShell onReconnect={handleReconnect} onDisconnect={handleDisconnect} />;
+      return <ChatShell onDisconnect={handleDisconnect} />;
   }
 }

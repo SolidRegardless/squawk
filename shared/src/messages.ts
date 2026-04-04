@@ -34,6 +34,13 @@ export interface ConnectedMessage {
   jid: string;
 }
 
+export interface StepMessage {
+  type: 'step';
+  accountId: string;
+  step: 'relay' | 'resolve' | 'handshake' | 'auth' | 'roster';
+  status: 'active' | 'done' | 'error';
+}
+
 export interface ErrorMessage {
   type: 'error';
   accountId?: string;
@@ -42,7 +49,7 @@ export interface ErrorMessage {
   details?: string;
 }
 
-export type RelayMessage = StatusMessage | ConnectedMessage | ErrorMessage;
+export type RelayMessage = StatusMessage | ConnectedMessage | StepMessage | ErrorMessage;
 
 // ── Union ───────────────────────────────────────────────────────
 

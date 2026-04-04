@@ -27,6 +27,10 @@ export class XmppManager {
     }
   }
 
+  private emitStep(accountId: string, step: string, status: string) {
+    this.emit({ type: 'step', accountId, step, status } as RelayMessage);
+  }
+
   private emitStatus(accountId: string, state: AccountStatus['state'], error?: string, jidStr?: string) {
     const status: AccountStatus = { accountId, state, error, jid: jidStr };
     this.emit({ type: 'status', status });
@@ -73,15 +77,14 @@ export class XmppManager {
     const fullJid = `${account.username}@${account.domain}/${resource}`;
     const server = account.connectServer || account.domain;
     const port = account.port || 5222;
-
     const security = account.security || 'require-tls';
     const transport = account.transport || 'tcp';
 
     this.emitStatus(accountId, 'connecting');
 
-    console.log(`[xmpp] ═══════════════════════════════════════════`);
+    console.log(`[xmpp] ═══════════════════════════════════════════════`);
     console.log(`[xmpp] Connection attempt for account: ${accountId}`);
-    console.log(`[xmpp] ───────────────────────────────────────────`);
+    console.log(`[xmpp] ───────────────────────────────────────────────`);
     console.log(`[xmpp]   JID:            ${fullJid}`);
     console.log(`[xmpp]   Username:       ${account.username}`);
     console.log(`[xmpp]   Domain:         ${account.domain}`);
@@ -90,10 +93,12 @@ export class XmppManager {
     console.log(`[xmpp]   Port:           ${port}`);
     console.log(`[xmpp]   Transport:      ${transport}`);
     console.log(`[xmpp]   Security:       ${security}`);
-    console.log(`[xmpp]   Save Password:  ${account.savePassword}`);
     console.log(`[xmpp]   Service URL:    xmpp://${server}:${port}`);
-    console.log(`[xmpp]   NODE_TLS_REJECT_UNAUTHORIZED: ${process.env.NODE_TLS_REJECT_UNAUTHORIZED}`);
-    console.log(`[xmpp] ═══════════════════════════════════════════`);
+    console.log(`[xmpp] ═══════════════════════════════════════════════`);
+
+    // Step 1: Relay is already connected (we're here), mark done
+    this.emitStep(accountId, 'relay', 'done');
+    this.emitStep(accountId, 'resolve', 'active');
 
     try {
       const clientConfig: any = {
@@ -115,11 +120,41 @@ export class XmppManager {
       };
       this.connections.set(accountId, managed);
 
-      // Log ALL events for debugging
+      // Track connection phases via status events
       xmpp.on('status', (status: string) => {
         console.log(`[xmpp] Status change: ${status}`);
+
+        switch (status) {
+          case 'connecting':
+            // TCP connection starting — resolving server
+            this.emitStep(accountId, 'resolve', 'active');
+            break;
+          case 'connect':
+            // TCP connected — resolve done, handshake starting
+            this.emitStep(accountId, 'resolve', 'done');
+            this.emitStep(accountId, 'handshake', 'active');
+            break;
+          case 'open':
+            // XMPP stream opened — handshake done, auth starting
+            this.emitStep(accountId, 'handshake', 'done');
+            this.emitStep(accountId, 'auth', 'active');
+            break;
+          case 'online':
+            // Fully authenticated — auth done, roster loading
+            this.emitStep(accountId, 'auth', 'done');
+            this.emitStep(accountId, 'roster', 'active');
+            // Brief pause to show roster step, then done
+            setTimeout(() => {
+              this.emitStep(accountId, 'roster', 'done');
+            }, 400);
+            break;
+          case 'disconnect':
+          case 'close':
+            break;
+        }
       });
 
+      // Verbose logging
       xmpp.on('input', (data: string) => {
         console.log(`[xmpp] ← RECV:`, data.substring(0, 500));
       });
@@ -156,7 +191,7 @@ export class XmppManager {
 
       xmpp.on('error', (err: any) => {
         const message = err?.message || err?.condition || String(err);
-        console.error(`[xmpp] Error: ${accountId}`, message);
+        console.error(`[xmpp] Error: ${accountId}`, err);
 
         let code = 'CONNECT_FAILED';
         let details = message;
@@ -164,16 +199,22 @@ export class XmppManager {
         if (message.includes('not-authorized') || message.includes('auth') || message.includes('SASL')) {
           code = 'AUTH_FAILED';
           details = 'Authentication failed — check your username and password.';
+          this.emitStep(accountId, 'auth', 'error');
         } else if (message.includes('ENOTFOUND') || message.includes('getaddrinfo')) {
           details = `Cannot resolve "${server}". Check the domain and your internet connection.`;
+          this.emitStep(accountId, 'resolve', 'error');
         } else if (message.includes('ECONNREFUSED')) {
           details = `Connection refused by ${server}:${port}. The XMPP server may be down.`;
+          this.emitStep(accountId, 'resolve', 'error');
         } else if (message.includes('ETIMEDOUT')) {
           details = `Connection to ${server}:${port} timed out. Check your network or firewall.`;
+          this.emitStep(accountId, 'resolve', 'error');
         } else if (message.includes('ECONNRESET')) {
           details = `Connection reset by ${server}:${port}.`;
+          this.emitStep(accountId, 'handshake', 'error');
         } else if (message.includes('certificate') || message.includes('SSL') || message.includes('TLS') || message.includes('ERR_TLS')) {
           details = `TLS error connecting to ${server}. The server's certificate may be invalid or self-signed.`;
+          this.emitStep(accountId, 'handshake', 'error');
         }
 
         this.emitStatus(accountId, 'error', details);
@@ -191,6 +232,7 @@ export class XmppManager {
       const message = err instanceof Error ? err.message : 'Connection failed';
       console.error(`[xmpp] Start error: ${accountId}`, message);
 
+      this.emitStep(accountId, 'resolve', 'error');
       this.emitStatus(accountId, 'error', message);
       this.emit({
         type: 'error',

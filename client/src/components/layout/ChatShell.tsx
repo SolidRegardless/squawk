@@ -2,30 +2,20 @@ import { useAccountStore } from '../../stores/accountStore.tsx';
 import styles from './ChatShell.module.css';
 
 interface Props {
-  onReconnect: () => void;
   onDisconnect: () => void;
 }
 
-export function ChatShell({ onReconnect, onDisconnect }: Props) {
+export function ChatShell({ onDisconnect }: Props) {
   const accounts = useAccountStore((s) => s.accounts);
   const activeId = useAccountStore((s) => s.activeAccountId);
   const status = useAccountStore((s) => s.connectionStatus);
   const disconnect = useAccountStore((s) => s.disconnect);
-  const connect = useAccountStore((s) => s.connect);
 
   const account = accounts.find((a) => a.id === activeId);
 
   const handleDisconnect = () => {
     disconnect();
     onDisconnect();
-  };
-
-  const handleReconnect = () => {
-    disconnect();
-    setTimeout(() => {
-      connect(account?.password);
-      onReconnect();
-    }, 100);
   };
 
   return (
@@ -54,9 +44,6 @@ export function ChatShell({ onReconnect, onDisconnect }: Props) {
         </div>
 
         <div className={styles.sidebarFooter}>
-          <button className={styles.footerBtn} onClick={handleReconnect}>
-            🔄 Reconnect
-          </button>
           <button className={`${styles.footerBtn} ${styles.disconnectBtn}`} onClick={handleDisconnect}>
             Disconnect
           </button>

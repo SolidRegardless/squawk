@@ -57,37 +57,26 @@ export const useAccountStore = create<AccountState>((set, get) => {
       // Set up relay message handling
       relay.onMessage((msg) => {
         switch (msg.type) {
+          case 'step': {
+            // Granular step updates from the relay
+            const steps = { ...get().connectionSteps };
+            steps[msg.step as ConnectionStep] = msg.status as StepStatus;
+            set({ connectionSteps: steps });
+            break;
+          }
           case 'status':
             if (msg.status.state === 'connecting') {
-              set({
-                connectionStatus: 'connecting',
-                connectionSteps: {
-                  ...get().connectionSteps,
-                  relay: 'done',
-                  resolve: 'active',
-                },
-              });
+              set({ connectionStatus: 'connecting' });
             } else if (msg.status.state === 'connected') {
               set({
                 connectionStatus: 'connected',
                 connectionError: null,
-                connectionSteps: {
-                  relay: 'done',
-                  resolve: 'done',
-                  handshake: 'done',
-                  auth: 'done',
-                  roster: 'done',
-                },
               });
               clearTimers();
             } else if (msg.status.state === 'error') {
               set({
                 connectionStatus: 'error',
                 connectionError: msg.status.error ?? 'Unknown error',
-                connectionSteps: {
-                  ...get().connectionSteps,
-                  resolve: get().connectionSteps.resolve === 'done' ? 'done' : 'error',
-                },
               });
               clearTimers();
             }
@@ -96,37 +85,13 @@ export const useAccountStore = create<AccountState>((set, get) => {
             set({
               connectionStatus: 'connected',
               connectionError: null,
-              connectionSteps: {
-                relay: 'done',
-                resolve: 'done',
-                handshake: 'done',
-                auth: 'done',
-                roster: 'done',
-              },
             });
             clearTimers();
             break;
           case 'error': {
-            // Map error codes to which step failed
-            const steps = { ...get().connectionSteps };
-            if (msg.code === 'AUTH_FAILED') {
-              steps.relay = 'done';
-              steps.resolve = 'done';
-              steps.handshake = 'done';
-              steps.auth = 'error';
-            } else if (msg.code === 'CONNECT_FAILED') {
-              steps.relay = 'done';
-              steps.resolve = 'error';
-            } else {
-              // Generic: mark current active step as error
-              for (const key of Object.keys(steps) as ConnectionStep[]) {
-                if (steps[key] === 'active') steps[key] = 'error';
-              }
-            }
             set({
               connectionStatus: 'error',
               connectionError: msg.details ?? msg.message,
-              connectionSteps: steps,
             });
             clearTimers();
             break;
