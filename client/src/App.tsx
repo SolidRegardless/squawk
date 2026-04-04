@@ -94,10 +94,11 @@ export function App() {
     setPhase('accounts');
   }, []);
 
-  // Watch connection status changes
+  // Watch connection status changes — delay transition so user sees all steps go green
   useEffect(() => {
     if (phase === 'connecting' && status === 'connected') {
-      setPhase('connected');
+      const timer = setTimeout(() => setPhase('connected'), 1200);
+      return () => clearTimeout(timer);
     }
   }, [phase, status]);
 

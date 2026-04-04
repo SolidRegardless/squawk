@@ -140,13 +140,14 @@ export class XmppManager {
             this.emitStep(accountId, 'auth', 'active');
             break;
           case 'online':
-            // Fully authenticated — auth done, roster loading
-            this.emitStep(accountId, 'auth', 'done');
-            this.emitStep(accountId, 'roster', 'active');
-            // Brief pause to show roster step, then done
+            // Stagger the final steps so the user sees each one tick
+            setTimeout(() => {
+              this.emitStep(accountId, 'auth', 'done');
+              this.emitStep(accountId, 'roster', 'active');
+            }, 300);
             setTimeout(() => {
               this.emitStep(accountId, 'roster', 'done');
-            }, 400);
+            }, 700);
             break;
           case 'disconnect':
           case 'close':
