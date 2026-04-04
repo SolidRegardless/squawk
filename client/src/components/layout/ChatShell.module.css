@@ -7,7 +7,7 @@
 .sidebar {
   width: 280px;
   min-width: 280px;
-  background: var(--sq-bg-mid);
+  background: var(--sq-bg-surface);
   border-right: 1px solid var(--sq-border);
   display: flex;
   flex-direction: column;
@@ -28,7 +28,7 @@
 .brand {
   font-size: 22px;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--sq-accent-teal), var(--sq-accent-green));
+  background: linear-gradient(135deg, var(--sq-blue-deep), var(--sq-accent-primary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -67,11 +67,11 @@
 
 .statusDot.connected {
   background: var(--sq-accent-green);
-  box-shadow: 0 0 6px rgba(74, 222, 128, 0.5);
+  box-shadow: 0 0 6px rgba(102, 187, 106, 0.5);
 }
 
 .statusDot.connecting {
-  background: var(--sq-accent-gold);
+  background: var(--sq-accent-orange);
   animation: sq-pulse 1.4s ease infinite;
 }
 
@@ -102,7 +102,7 @@
 .placeholderText {
   font-size: 16px;
   font-weight: 700;
-  color: var(--sq-accent-teal);
+  color: var(--sq-accent-primary);
   margin-bottom: 8px;
 }
 
@@ -159,7 +159,7 @@
 .emptyTitle {
   font-size: 28px;
   font-weight: 800;
-  color: var(--sq-accent-teal);
+  color: var(--sq-blue-deep);
   margin-bottom: 8px;
 }
 

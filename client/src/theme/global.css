@@ -1,39 +1,46 @@
 /* ── Squawk Theme — Extracted from splash art ─────────────── */
-/* Deep ocean teals, vibrant jungle greens, warm golden accents */
+/* Sky blue cartoon bird, clouds, green foliage, cheerful & bright */
 
 :root {
-  /* Primary palette — from the parrot splash */
-  --sq-bg-deep:       #0a1e2e;    /* Deep ocean night */
-  --sq-bg-mid:        #0e3a2e;    /* Forest canopy */
-  --sq-bg-surface:    #143d34;    /* Card/panel background */
-  --sq-bg-elevated:   #1a5244;    /* Elevated surface */
+  /* Primary palette — from the cartoon splash */
+  --sq-bg-deep:       #e8f4fd;    /* Light sky wash */
+  --sq-bg-mid:        #f0f8ff;    /* Soft cloud white */
+  --sq-bg-surface:    #ffffff;    /* Card/panel background */
+  --sq-bg-elevated:   #f5faff;    /* Elevated surface */
+
+  /* Core blues — the bird */
+  --sq-blue-deep:     #1e88e5;    /* Strong blue */
+  --sq-blue-mid:      #42a5f5;    /* Primary blue */
+  --sq-blue-light:    #90caf9;    /* Light accent blue */
+  --sq-blue-pale:     #bbdefb;    /* Pale blue tint */
 
   /* Accent colours */
-  --sq-accent-teal:   #2dd4a8;    /* Primary action — teal green */
-  --sq-accent-green:  #4ade80;    /* Success / online */
-  --sq-accent-gold:   #fbbf24;    /* Warning / highlight */
-  --sq-accent-coral:  #fb7185;    /* Error / notification */
-  --sq-accent-sky:    #38bdf8;    /* Info / link */
-  --sq-accent-violet: #a78bfa;    /* Subtle accent */
+  --sq-accent-primary:#42a5f5;    /* Primary action — sky blue */
+  --sq-accent-green:  #66bb6a;    /* Success / online / foliage */
+  --sq-accent-orange: #ffa726;    /* Beak / warm accent */
+  --sq-accent-coral:  #ef5350;    /* Error / notification */
+  --sq-accent-pink:   #ec407a;    /* Heart / love reactions */
+  --sq-accent-teal:   #26c6da;    /* Info highlights */
 
   /* Text */
-  --sq-text-primary:  #e8f5f0;    /* Main text — light mint */
-  --sq-text-secondary:#8bb5a2;    /* Muted text */
-  --sq-text-disabled: #4a7a6a;    /* Disabled */
+  --sq-text-primary:  #1a237e;    /* Deep navy text */
+  --sq-text-secondary:#5c6bc0;    /* Muted indigo */
+  --sq-text-disabled: #9fa8da;    /* Disabled */
+  --sq-text-inverse:  #ffffff;    /* White text on dark bg */
 
   /* Borders & dividers */
-  --sq-border:        #1e5c4a;
-  --sq-border-focus:  #2dd4a8;
+  --sq-border:        #c5cae9;
+  --sq-border-focus:  #42a5f5;
 
-  /* Shadows */
-  --sq-shadow-sm:     0 1px 3px rgba(0,0,0,0.4);
-  --sq-shadow-md:     0 4px 12px rgba(0,0,0,0.5);
-  --sq-shadow-lg:     0 8px 24px rgba(0,0,0,0.6);
+  /* Shadows — softer for light theme */
+  --sq-shadow-sm:     0 1px 3px rgba(30, 136, 229, 0.1);
+  --sq-shadow-md:     0 4px 12px rgba(30, 136, 229, 0.15);
+  --sq-shadow-lg:     0 8px 24px rgba(30, 136, 229, 0.2);
 
   /* Radius */
-  --sq-radius-sm:     6px;
-  --sq-radius-md:     12px;
-  --sq-radius-lg:     20px;
+  --sq-radius-sm:     8px;
+  --sq-radius-md:     14px;
+  --sq-radius-lg:     22px;
   --sq-radius-full:   9999px;
 
   /* Font */
@@ -65,7 +72,7 @@ body {
 
 /* ── Focus ring ─────────────────────────────────────────────── */
 :focus-visible {
-  outline: 2px solid var(--sq-accent-teal);
+  outline: 2px solid var(--sq-accent-primary);
   outline-offset: 2px;
 }
 
@@ -77,11 +84,11 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--sq-border);
+  background: var(--sq-blue-pale);
   border-radius: var(--sq-radius-full);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--sq-accent-teal);
+  background: var(--sq-accent-primary);
 }
 
 /* ── Utility animations ─────────────────────────────────────── */

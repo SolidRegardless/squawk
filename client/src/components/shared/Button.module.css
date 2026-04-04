@@ -24,13 +24,14 @@
 
 /* Variants */
 .primary {
-  background: linear-gradient(135deg, var(--sq-accent-teal), #20b090);
-  color: var(--sq-bg-deep);
+  background: linear-gradient(135deg, var(--sq-blue-deep), var(--sq-accent-primary));
+  color: white;
   box-shadow: var(--sq-shadow-sm);
 }
 .primary:hover:not(:disabled) {
   box-shadow: var(--sq-shadow-md);
   transform: translateY(-1px);
+  filter: brightness(1.05);
 }
 
 .secondary {
@@ -39,8 +40,8 @@
   border: 1px solid var(--sq-border);
 }
 .secondary:hover:not(:disabled) {
-  border-color: var(--sq-accent-teal);
-  background: var(--sq-bg-surface);
+  border-color: var(--sq-accent-primary);
+  background: var(--sq-bg-deep);
 }
 
 .ghost {

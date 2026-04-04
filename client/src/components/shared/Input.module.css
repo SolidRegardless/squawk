@@ -36,8 +36,8 @@
 
 .input:focus {
   outline: none;
-  border-color: var(--sq-accent-teal);
-  box-shadow: 0 0 0 3px rgba(45, 212, 168, 0.15);
+  border-color: var(--sq-accent-primary);
+  box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.15);
 }
 
 .hasError .input {
@@ -45,7 +45,7 @@
 }
 
 .hasError .input:focus {
-  box-shadow: 0 0 0 3px rgba(251, 113, 133, 0.15);
+  box-shadow: 0 0 0 3px rgba(239, 83, 80, 0.15);
 }
 
 .hint {
