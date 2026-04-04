@@ -8,8 +8,9 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "@xmpp/client": "^0.13.0",
+    "@xmpp/debug": "^0.13.0",
     "express": "^5.0.0",
-    "stanza": "^12.22.0",
     "ws": "^8.18.0",
     "uuid": "^11.1.0"
   },

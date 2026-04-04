@@ -4,6 +4,9 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { XmppManager } from './xmpp/manager.js';
 import type { ClientMessage, RelayMessage } from '../../shared/src/messages.js';
 
+// Allow self-signed certs for XMPP servers
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 const PORT = Number(process.env.RELAY_PORT) || 3001;
 
 const app = express();

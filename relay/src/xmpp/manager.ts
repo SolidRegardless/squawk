@@ -1,11 +1,12 @@
-import { createClient, Agent } from 'stanza';
+// @ts-nocheck — @xmpp/client has limited TS types
+import { client, xml, jid } from '@xmpp/client';
 import type { AccountConfig, AccountStatus } from '../../../shared/src/account.js';
 import type { RelayMessage } from '../../../shared/src/messages.js';
 
 type EventCallback = (msg: RelayMessage) => void;
 
 interface ManagedConnection {
-  client: Agent;
+  xmpp: any;
   accountId: string;
   status: AccountStatus;
 }
@@ -26,8 +27,8 @@ export class XmppManager {
     }
   }
 
-  private emitStatus(accountId: string, state: AccountStatus['state'], error?: string, jid?: string) {
-    const status: AccountStatus = { accountId, state, error, jid };
+  private emitStatus(accountId: string, state: AccountStatus['state'], error?: string, jidStr?: string) {
+    const status: AccountStatus = { accountId, state, error, jid: jidStr };
     this.emit({ type: 'status', status });
 
     const conn = this.connections.get(accountId);
@@ -69,123 +70,91 @@ export class XmppManager {
     }
 
     const resource = account.resource || `squawk-${Date.now().toString(36)}`;
-    const jid = `${account.username}@${account.domain}/${resource}`;
-    const transport = account.transport || 'tcp';
-    const port = account.port || (transport === 'tcp' ? 5222 : 5281);
+    const fullJid = `${account.username}@${account.domain}/${resource}`;
     const server = account.connectServer || account.domain;
-    const security = account.security || 'require-tls';
+    const port = account.port || 5222;
 
     this.emitStatus(accountId, 'connecting');
-    console.log(`[xmpp] Connecting ${jid} via ${transport}:${port} to ${server} (security: ${security})`);
+    console.log(`[xmpp] Connecting ${fullJid} → ${server}:${port}`);
 
     try {
-      // Build transport config based on type
-      const clientConfig: any = {
-        jid,
+      const xmpp = client({
+        service: `xmpp://${server}:${port}`,
+        domain: account.domain,
+        resource,
+        username: account.username,
         password,
-      };
-
-      if (transport === 'tcp') {
-        // Standard XMPP over TCP (port 5222)
-        clientConfig.transports = {
-          tcp: {
-            host: server,
-            port,
-          },
-        };
-        // TLS settings
-        if (security === 'require-tls') {
-          clientConfig.tls = {
-            rejectUnauthorized: false, // Many Jabber servers use self-signed certs
-          };
-        } else if (security === 'none') {
-          clientConfig.tls = false;
-        }
-      } else if (transport === 'websocket') {
-        const wsScheme = security === 'none' ? 'ws' : 'wss';
-        clientConfig.transports = {
-          websocket: `${wsScheme}://${server}:${port}/xmpp-websocket`,
-        };
-      } else if (transport === 'bosh') {
-        const httpScheme = security === 'none' ? 'http' : 'https';
-        const boshUrl = account.boshUrl || `${httpScheme}://${server}:${port}/http-bind`;
-        clientConfig.transports = {
-          bosh: boshUrl,
-        };
-      }
-
-      const client = createClient(clientConfig);
+      });
 
       const managed: ManagedConnection = {
-        client,
+        xmpp,
         accountId,
         status: { accountId, state: 'connecting' },
       };
       this.connections.set(accountId, managed);
 
-      client.on('session:started', () => {
-        console.log(`[xmpp] Connected: ${jid}`);
-        this.emitStatus(accountId, 'connected', undefined, jid);
-        this.emit({ type: 'connected', accountId, jid });
-        // Send initial presence
-        client.sendPresence();
+      xmpp.on('status', (status: string) => {
+        console.log(`[xmpp] Status: ${status}`);
       });
 
-      client.on('disconnected', () => {
-        console.log(`[xmpp] Disconnected: ${accountId}`);
+      xmpp.on('online', (address: any) => {
+        const jidStr = address?.toString() || fullJid;
+        console.log(`[xmpp] Online: ${jidStr}`);
+        this.emitStatus(accountId, 'connected', undefined, jidStr);
+        this.emit({ type: 'connected', accountId, jid: jidStr });
+        // Send initial presence
+        xmpp.send(xml('presence'));
+      });
+
+      xmpp.on('offline', () => {
+        console.log(`[xmpp] Offline: ${accountId}`);
         this.emitStatus(accountId, 'disconnected');
       });
 
-      client.on('auth:failed', () => {
-        console.log(`[xmpp] Auth failed: ${accountId}`);
-        this.emitStatus(accountId, 'error', 'Authentication failed — check username/password');
+      xmpp.on('error', (err: any) => {
+        const message = err?.message || err?.condition || String(err);
+        console.error(`[xmpp] Error: ${accountId}`, message);
+
+        let code = 'CONNECT_FAILED';
+        let details = message;
+
+        if (message.includes('not-authorized') || message.includes('auth') || message.includes('SASL')) {
+          code = 'AUTH_FAILED';
+          details = 'Authentication failed — check your username and password.';
+        } else if (message.includes('ENOTFOUND') || message.includes('getaddrinfo')) {
+          details = `Cannot resolve "${server}". Check the domain and your internet connection.`;
+        } else if (message.includes('ECONNREFUSED')) {
+          details = `Connection refused by ${server}:${port}. The XMPP server may be down.`;
+        } else if (message.includes('ETIMEDOUT')) {
+          details = `Connection to ${server}:${port} timed out. Check your network or firewall.`;
+        } else if (message.includes('ECONNRESET')) {
+          details = `Connection reset by ${server}:${port}.`;
+        } else if (message.includes('certificate') || message.includes('SSL') || message.includes('TLS') || message.includes('ERR_TLS')) {
+          details = `TLS error connecting to ${server}. The server's certificate may be invalid or self-signed.`;
+        }
+
+        this.emitStatus(accountId, 'error', details);
         this.emit({
           type: 'error',
           accountId,
-          code: 'AUTH_FAILED',
-          message: 'Authentication failed',
-          details: 'Check your username and password. Ensure the account exists on the XMPP server.',
+          code,
+          message: 'Connection error',
+          details,
         });
       });
 
-      client.on('stream:error', (err) => {
-        const detail = typeof err === 'object' && err !== null ? JSON.stringify(err) : String(err);
-        console.log(`[xmpp] Stream error: ${accountId}`, detail);
-        this.emitStatus(accountId, 'error', `Stream error: ${detail}`);
-        this.emit({
-          type: 'error',
-          accountId,
-          code: 'STREAM_ERROR',
-          message: 'XMPP stream error',
-          details: detail,
-        });
-      });
-
-      await client.connect();
+      await xmpp.start();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Connection failed';
-      console.error(`[xmpp] Connect error: ${accountId}`, message);
+      console.error(`[xmpp] Start error: ${accountId}`, message);
 
-      let details = message;
-      if (message.includes('ENOTFOUND') || message.includes('getaddrinfo')) {
-        details = `Cannot resolve "${server}". Check the domain name and your internet connection.`;
-      } else if (message.includes('ECONNREFUSED')) {
-        details = `Connection refused by ${server}:${port}. The XMPP server may be down or not listening on port ${port}.`;
-      } else if (message.includes('ETIMEDOUT')) {
-        details = `Connection to ${server}:${port} timed out. Check your network or firewall settings.`;
-      } else if (message.includes('certificate') || message.includes('SSL') || message.includes('TLS')) {
-        details = `TLS/SSL error connecting to ${server}. The server's certificate may be invalid. Try setting security to "allow-plaintext" if the server doesn't support TLS.`;
-      } else if (message.includes('ECONNRESET')) {
-        details = `Connection reset by ${server}:${port}. The server closed the connection unexpectedly.`;
-      }
-
-      this.emitStatus(accountId, 'error', details);
+      this.emitStatus(accountId, 'error', message);
       this.emit({
         type: 'error',
         accountId,
         code: 'CONNECT_FAILED',
         message: 'Failed to connect',
-        details,
+        details: message,
       });
     }
   }
@@ -194,7 +163,7 @@ export class XmppManager {
     const conn = this.connections.get(accountId);
     if (conn) {
       try {
-        await conn.client.disconnect();
+        await conn.xmpp.stop();
       } catch { /* already disconnected */ }
       this.connections.delete(accountId);
       this.emitStatus(accountId, 'disconnected');
