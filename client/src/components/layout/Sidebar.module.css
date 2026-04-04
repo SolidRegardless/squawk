@@ -218,6 +218,110 @@
   padding: 12px 12px 6px;
 }
 
+/* Chat item rows */
+.itemTopRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.itemBottomRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.itemBottomRow .itemPreview {
+  flex: 1;
+}
+
+.itemTime {
+  font-size: 11px;
+  color: var(--sq-text-disabled);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.emptyHint {
+  font-size: 11px;
+  color: var(--sq-text-disabled);
+  margin-top: 2px;
+}
+
+/* Room rows with swipe */
+.roomRow {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--sq-radius-md);
+}
+
+.roomRow .listItem {
+  transition: transform 200ms ease, background var(--sq-transition);
+}
+
+.roomSwiped .listItem {
+  transform: translateX(-70px);
+}
+
+.roomArrow {
+  font-size: 22px;
+  color: var(--sq-blue-light);
+  font-weight: 300;
+  flex-shrink: 0;
+  padding: 0 4px;
+  cursor: pointer;
+  transition: transform var(--sq-transition), color var(--sq-transition);
+  line-height: 1;
+}
+
+.roomArrow:hover {
+  color: var(--sq-accent-primary);
+}
+
+.roomSwiped .roomArrow {
+  transform: rotate(180deg);
+  color: var(--sq-accent-primary);
+}
+
+.roomActions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  display: flex;
+  transform: translateX(100%);
+  transition: transform 200ms ease;
+}
+
+.roomSwiped .roomActions {
+  transform: translateX(0);
+}
+
+.leaveBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 70px;
+  height: 100%;
+  background: var(--sq-accent-coral);
+  border: none;
+  color: white;
+  font-family: var(--sq-font);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.leaveBtn:hover {
+  filter: brightness(1.1);
+}
+
+/* Hide swipe on desktop, show arrow menu */
+@media (pointer: coarse) {
+  .roomArrow { display: none; }
+}
+
 .browseBtn {
   margin: 8px 12px;
   padding: 10px;
