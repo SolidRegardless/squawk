@@ -17,6 +17,8 @@ export function RoomBrowser({ onClose }: Props) {
   const listRooms = useMucStore((s) => s.listRooms);
   const joinRoom = useMucStore((s) => s.joinRoom);
   const loading = useMucStore((s) => s.loading);
+  const error = useMucStore((s) => s.error);
+  const clearError = useMucStore((s) => s.clearError);
   const accounts = useAccountStore((s) => s.accounts);
   const activeId = useAccountStore((s) => s.activeAccountId);
 
@@ -58,6 +60,7 @@ export function RoomBrowser({ onClose }: Props) {
 
         <div className={styles.serverRow}>
           <Input
+            className={styles.serverInput}
             label="Conference Server"
             placeholder={`conference.${account?.domain || 'your_domain.com'}`}
             value={server}
@@ -70,6 +73,13 @@ export function RoomBrowser({ onClose }: Props) {
             </Button>
           </div>
         </div>
+
+        {error && (
+          <div className={styles.errorToast}>
+            <span>❌ {error}</span>
+            <button className={styles.errorClose} onClick={clearError}>✕</button>
+          </div>
+        )}
 
         {availableRooms.length > 0 && (
           <div className={styles.searchRow}>

@@ -17,6 +17,7 @@ interface MucState {
   activeRoom: string | null;
   conferenceServer: string;
   loading: boolean;
+  error: string | null;
 
   setActiveRoom: (jid: string | null) => void;
   setConferenceServer: (server: string) => void;
@@ -24,6 +25,7 @@ interface MucState {
   joinRoom: (roomJid: string, nick: string) => void;
   leaveRoom: (roomJid: string) => void;
   sendMessage: (roomJid: string, body: string) => void;
+  clearError: () => void;
   init: (domain: string) => () => void;
 }
 
@@ -34,6 +36,7 @@ export const useMucStore = create<MucState>((set, get) => ({
   activeRoom: null,
   conferenceServer: '',
   loading: false,
+  error: null,
 
   setActiveRoom: (jid) => {
     set({ activeRoom: jid });
@@ -71,11 +74,18 @@ export const useMucStore = create<MucState>((set, get) => ({
     relay.send({ type: 'muc:send', room: roomJid, body });
   },
 
+  clearError: () => set({ error: null }),
+
   init: (domain) => {
     set({ conferenceServer: `conference.${domain}` });
 
     return relay.onMessage((msg) => {
       switch (msg.type) {
+        case 'error':
+          set({ error: msg.message });
+          // Auto-clear after 5 seconds
+          setTimeout(() => set({ error: null }), 5000);
+          break;
         case 'muc:rooms':
           set({ availableRooms: msg.rooms, loading: false });
           break;
