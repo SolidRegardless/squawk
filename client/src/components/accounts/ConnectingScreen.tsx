@@ -32,20 +32,21 @@ export function ConnectingScreen({ onBack }: Props) {
     }
   };
 
-  const isConnecting = status === 'connecting';
   const isError = status === 'error';
+  const allDone = Object.values(steps).every((s) => s === 'done');
 
   return (
     <div className={styles.container}>
       <div className={styles.card}>
-        {isConnecting && (
+        {!isError && (
           <>
             <div className={styles.spinner}>
-              <span className={styles.parrot}>🦜</span>
+              <span className={styles.parrot}>{allDone ? '✅' : '🦜'}</span>
             </div>
-            <h2 className={styles.title}>Connecting...</h2>
+            <h2 className={styles.title}>{allDone ? 'Connected!' : 'Connecting...'}</h2>
             <p className={styles.info}>
-              Reaching <strong>{activeAccount?.domain}</strong> as{' '}
+              {allDone ? 'Signed in to' : 'Reaching'}{' '}
+              <strong>{activeAccount?.domain}</strong> as{' '}
               <strong>{activeAccount?.username}</strong>
             </p>
           </>
