@@ -254,9 +254,13 @@
   position: relative;
   overflow: hidden;
   border-radius: var(--sq-radius-md);
+  height: 58px;
 }
 
 .roomRow .listItem {
+  position: relative;
+  z-index: 1;
+  background: var(--sq-bg-surface);
   transition: transform 200ms ease, background var(--sq-transition);
 }
 
@@ -288,14 +292,10 @@
   position: absolute;
   top: 0;
   right: 0;
+  width: 70px;
   height: 100%;
   display: flex;
-  transform: translateX(100%);
-  transition: transform 200ms ease;
-}
-
-.roomSwiped .roomActions {
-  transform: translateX(0);
+  z-index: 0;
 }
 
 .leaveBtn {
