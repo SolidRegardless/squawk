@@ -144,6 +144,11 @@ export const useAccountStore = create<AccountState>((set, get) => {
         resource: input.resource || undefined,
         savePassword: input.savePassword,
         password: input.savePassword ? input.password : undefined,
+        transport: input.transport || 'tcp',
+        port: input.port,
+        security: input.security || 'require-tls',
+        connectServer: input.connectServer,
+        boshUrl: input.boshUrl,
         createdAt: new Date().toISOString(),
         lastUsedAt: new Date().toISOString(),
       };

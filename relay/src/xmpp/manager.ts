@@ -68,21 +68,53 @@ export class XmppManager {
       return;
     }
 
-    const jid = account.resource
-      ? `${account.username}@${account.domain}/${account.resource}`
-      : `${account.username}@${account.domain}/squawk-${Date.now().toString(36)}`;
+    const resource = account.resource || `squawk-${Date.now().toString(36)}`;
+    const jid = `${account.username}@${account.domain}/${resource}`;
+    const transport = account.transport || 'tcp';
+    const port = account.port || (transport === 'tcp' ? 5222 : 5281);
+    const server = account.connectServer || account.domain;
+    const security = account.security || 'require-tls';
 
     this.emitStatus(accountId, 'connecting');
+    console.log(`[xmpp] Connecting ${jid} via ${transport}:${port} to ${server} (security: ${security})`);
 
     try {
-      const client = createClient({
+      // Build transport config based on type
+      const clientConfig: any = {
         jid,
         password,
-        transports: {
-          websocket: `wss://${account.domain}:5281/xmpp-websocket`,
-          bosh: `https://${account.domain}:5281/http-bind`,
-        },
-      });
+      };
+
+      if (transport === 'tcp') {
+        // Standard XMPP over TCP (port 5222)
+        clientConfig.transports = {
+          tcp: {
+            host: server,
+            port,
+          },
+        };
+        // TLS settings
+        if (security === 'require-tls') {
+          clientConfig.tls = {
+            rejectUnauthorized: false, // Many Jabber servers use self-signed certs
+          };
+        } else if (security === 'none') {
+          clientConfig.tls = false;
+        }
+      } else if (transport === 'websocket') {
+        const wsScheme = security === 'none' ? 'ws' : 'wss';
+        clientConfig.transports = {
+          websocket: `${wsScheme}://${server}:${port}/xmpp-websocket`,
+        };
+      } else if (transport === 'bosh') {
+        const httpScheme = security === 'none' ? 'http' : 'https';
+        const boshUrl = account.boshUrl || `${httpScheme}://${server}:${port}/http-bind`;
+        clientConfig.transports = {
+          bosh: boshUrl,
+        };
+      }
+
+      const client = createClient(clientConfig);
 
       const managed: ManagedConnection = {
         client,
@@ -136,13 +168,15 @@ export class XmppManager {
 
       let details = message;
       if (message.includes('ENOTFOUND') || message.includes('getaddrinfo')) {
-        details = `Cannot resolve domain "${account.domain}". Check the domain name and your internet connection.`;
+        details = `Cannot resolve "${server}". Check the domain name and your internet connection.`;
       } else if (message.includes('ECONNREFUSED')) {
-        details = `Connection refused by ${account.domain}. The XMPP server may be down or not accepting connections on the expected port.`;
+        details = `Connection refused by ${server}:${port}. The XMPP server may be down or not listening on port ${port}.`;
       } else if (message.includes('ETIMEDOUT')) {
-        details = `Connection to ${account.domain} timed out. Check your network or firewall settings.`;
+        details = `Connection to ${server}:${port} timed out. Check your network or firewall settings.`;
       } else if (message.includes('certificate') || message.includes('SSL') || message.includes('TLS')) {
-        details = `TLS/SSL error connecting to ${account.domain}. The server's certificate may be invalid or self-signed.`;
+        details = `TLS/SSL error connecting to ${server}. The server's certificate may be invalid. Try setting security to "allow-plaintext" if the server doesn't support TLS.`;
+      } else if (message.includes('ECONNRESET')) {
+        details = `Connection reset by ${server}:${port}. The server closed the connection unexpectedly.`;
       }
 
       this.emitStatus(accountId, 'error', details);

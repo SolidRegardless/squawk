@@ -19,6 +19,10 @@ export function AccountSetup({ onCreated }: Props) {
   const [password, setPassword] = useState('');
   const [savePassword, setSavePassword] = useState(true);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [port, setPort] = useState('5222');
+  const [transport, setTransport] = useState<'tcp' | 'websocket' | 'bosh'>('tcp');
+  const [requireEncryption, setRequireEncryption] = useState(true);
+  const [connectServer, setConnectServer] = useState('');
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -30,6 +34,7 @@ export function AccountSetup({ onCreated }: Props) {
       errs.domain = 'Enter a valid domain (e.g. goonfleet.com)';
     }
     if (!password) errs.password = 'Password is required to connect';
+    if (port && isNaN(Number(port))) errs.port = 'Port must be a number';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -47,6 +52,10 @@ export function AccountSetup({ onCreated }: Props) {
         resource: resource.trim() || undefined,
         savePassword,
         password,
+        transport,
+        port: port ? Number(port) : undefined,
+        security: requireEncryption ? 'require-tls' : 'allow-plaintext',
+        connectServer: connectServer.trim() || undefined,
       });
       connect(password);
       onCreated();
@@ -125,6 +134,52 @@ export function AccountSetup({ onCreated }: Props) {
                 value={resource}
                 onChange={(e) => setResource(e.target.value)}
                 hint="Identifies this device/client. Leave blank for auto."
+              />
+
+              <div className={styles.selectField}>
+                <label className={styles.selectLabel}>Connection Type</label>
+                <select
+                  className={styles.select}
+                  value={transport}
+                  onChange={(e) => {
+                    const t = e.target.value as 'tcp' | 'websocket' | 'bosh';
+                    setTransport(t);
+                    if (t === 'tcp' && port === '5281') setPort('5222');
+                    if (t !== 'tcp' && port === '5222') setPort('5281');
+                  }}
+                >
+                  <option value="tcp">Standard XMPP (TCP)</option>
+                  <option value="websocket">WebSocket</option>
+                  <option value="bosh">BOSH (HTTP)</option>
+                </select>
+                <span className={styles.selectHint}>
+                  {transport === 'tcp' && 'Standard — works with most servers (port 5222)'}
+                  {transport === 'websocket' && 'Modern — requires server WebSocket support'}
+                  {transport === 'bosh' && 'Legacy HTTP binding — broadest browser compat'}
+                </span>
+              </div>
+
+              <Input
+                label="Port"
+                placeholder={transport === 'tcp' ? '5222' : '5281'}
+                value={port}
+                onChange={(e) => setPort(e.target.value)}
+                error={errors.port}
+                hint={`Default: ${transport === 'tcp' ? '5222' : '5281'}`}
+              />
+
+              <Toggle
+                label="Require encryption (TLS)"
+                checked={requireEncryption}
+                onChange={setRequireEncryption}
+              />
+
+              <Input
+                label="Connect Server"
+                placeholder="Same as domain"
+                value={connectServer}
+                onChange={(e) => setConnectServer(e.target.value)}
+                hint="Only set if the server hostname differs from the domain"
               />
             </div>
           )}
