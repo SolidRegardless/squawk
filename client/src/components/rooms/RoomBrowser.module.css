@@ -53,18 +53,16 @@
 }
 
 .serverRow {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto;
   gap: 10px;
-  align-items: flex-start;
+  align-items: end;
   padding: 0 24px 12px;
 }
 
-.serverRow > :first-child {
-  flex: 1;
-}
-
 .fetchBtnWrap {
-  padding-top: 22px;
+  /* Offset to sit next to the input, above the hint text */
+  margin-bottom: 18px;
 }
 
 .searchRow {
