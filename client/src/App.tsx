@@ -10,31 +10,44 @@ type AppPhase = 'splash' | 'setup' | 'password-prompt' | 'connecting' | 'connect
 
 export function App() {
   const [phase, setPhase] = useState<AppPhase>('splash');
+  const [loaded, setLoaded] = useState(false);
   const accounts = useAccountStore((s) => s.accounts);
   const activeId = useAccountStore((s) => s.activeAccountId);
   const status = useAccountStore((s) => s.connectionStatus);
   const loadAccounts = useAccountStore((s) => s.loadAccounts);
+  const connect = useAccountStore((s) => s.connect);
 
   // Load persisted accounts on mount
   useEffect(() => {
-    loadAccounts();
+    loadAccounts().then(() => setLoaded(true));
   }, [loadAccounts]);
 
   // After splash, decide where to go
   const handleSplashDone = useCallback(() => {
+    if (!loaded) {
+      // Accounts not loaded yet, wait a tick
+      const check = setInterval(() => {
+        setPhase('splash'); // keep on splash
+      }, 100);
+      setTimeout(() => clearInterval(check), 2000);
+      return;
+    }
+
     if (accounts.length === 0) {
       setPhase('setup');
     } else {
       const active = accounts.find((a) => a.id === activeId) ?? accounts[0];
       if (active.savePassword && active.password) {
+        // Auto-connect!
+        connect(active.password);
         setPhase('connecting');
       } else {
         setPhase('password-prompt');
       }
     }
-  }, [accounts, activeId]);
+  }, [accounts, activeId, loaded, connect]);
 
-  // After account created
+  // After account created (AccountSetup already calls connect)
   const handleAccountCreated = useCallback(() => {
     setPhase('connecting');
   }, []);
@@ -59,14 +72,12 @@ export function App() {
     if (phase === 'connecting' && status === 'connected') {
       setPhase('connected');
     }
-    // If disconnected while on connected screen, go back
     if (phase === 'connected' && status === 'disconnected') {
       if (accounts.length === 0) {
         setPhase('setup');
       } else {
         const active = accounts.find((a) => a.id === activeId) ?? accounts[0];
         if (active.savePassword && active.password) {
-          // Don't auto-reconnect — show setup so they can choose
           setPhase('connecting');
         } else {
           setPhase('password-prompt');
