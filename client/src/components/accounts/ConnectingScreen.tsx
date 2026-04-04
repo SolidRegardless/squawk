@@ -1,5 +1,4 @@
-import { useEffect } from 'react';
-import { useAccountStore } from '../../stores/accountStore.tsx';
+import { useAccountStore, type ConnectionStep, type StepStatus } from '../../stores/accountStore.tsx';
 import { Button } from '../shared/Button.tsx';
 import styles from './ConnectingScreen.module.css';
 
@@ -7,20 +6,25 @@ interface Props {
   onBack: () => void;
 }
 
+const STEP_LABELS: Record<ConnectionStep, string> = {
+  relay: 'Connect to relay server',
+  resolve: 'Resolve XMPP server',
+  handshake: 'XMPP handshake',
+  auth: 'Authentication',
+  roster: 'Loading roster',
+};
+
+const STEP_ORDER: ConnectionStep[] = ['relay', 'resolve', 'handshake', 'auth', 'roster'];
+
 export function ConnectingScreen({ onBack }: Props) {
   const status = useAccountStore((s) => s.connectionStatus);
   const error = useAccountStore((s) => s.connectionError);
+  const steps = useAccountStore((s) => s.connectionSteps);
   const activeId = useAccountStore((s) => s.activeAccountId);
   const accounts = useAccountStore((s) => s.accounts);
   const connect = useAccountStore((s) => s.connect);
 
   const activeAccount = accounts.find((a) => a.id === activeId);
-
-  // Auto-retry on error after 5s (max 3 times)
-  useEffect(() => {
-    if (status !== 'error') return;
-    // Don't auto-retry — user needs to see the error
-  }, [status]);
 
   const handleRetry = () => {
     if (activeAccount) {
@@ -44,12 +48,6 @@ export function ConnectingScreen({ onBack }: Props) {
               Reaching <strong>{activeAccount?.domain}</strong> as{' '}
               <strong>{activeAccount?.username}</strong>
             </p>
-            <div className={styles.steps}>
-              <Step label="Resolving server" status="active" />
-              <Step label="XMPP handshake" status="pending" />
-              <Step label="Authentication" status="pending" />
-              <Step label="Loading roster" status="pending" />
-            </div>
           </>
         )}
 
@@ -60,14 +58,45 @@ export function ConnectingScreen({ onBack }: Props) {
             <div className={styles.errorBox}>
               <p className={styles.errorMessage}>{error}</p>
             </div>
+          </>
+        )}
+
+        {/* Steps — always shown */}
+        <div className={styles.steps}>
+          {STEP_ORDER.map((key) => (
+            <StepRow key={key} label={STEP_LABELS[key]} status={steps[key]} />
+          ))}
+        </div>
+
+        {isError && (
+          <>
             <div className={styles.diagnostics}>
               <h3>Things to check:</h3>
               <ul>
-                <li>Is the domain <strong>{activeAccount?.domain}</strong> correct?</li>
-                <li>Is the XMPP server running and accessible?</li>
-                <li>Are your credentials correct?</li>
-                <li>Does the server support WebSocket or BOSH connections?</li>
-                <li>Check your firewall / VPN settings</li>
+                {steps.relay === 'error' && (
+                  <>
+                    <li>Is the relay server running? (<code>cd relay && npm run dev</code>)</li>
+                    <li>Check that port 3001 is not blocked</li>
+                  </>
+                )}
+                {steps.resolve === 'error' && (
+                  <>
+                    <li>Is the domain <strong>{activeAccount?.domain}</strong> correct?</li>
+                    <li>Is the XMPP server running and accessible?</li>
+                    <li>Check your firewall / VPN settings</li>
+                  </>
+                )}
+                {steps.auth === 'error' && (
+                  <>
+                    <li>Are your username and password correct?</li>
+                    <li>Does the account exist on <strong>{activeAccount?.domain}</strong>?</li>
+                    <li>Check if your account is locked or disabled</li>
+                  </>
+                )}
+                {steps.handshake === 'error' && (
+                  <li>Does the server support WebSocket or BOSH connections?</li>
+                )}
+                <li>Check the browser console and relay logs for details</li>
               </ul>
             </div>
             <div className={styles.actions}>
@@ -81,12 +110,18 @@ export function ConnectingScreen({ onBack }: Props) {
   );
 }
 
-function Step({ label, status }: { label: string; status: 'active' | 'done' | 'pending' | 'error' }) {
-  const icons = { active: '⏳', done: '✅', pending: '○', error: '❌' };
+function StepRow({ label, status }: { label: string; status: StepStatus }) {
+  const icons: Record<StepStatus, string> = {
+    active: '⏳',
+    done: '✅',
+    pending: '○',
+    error: '❌',
+  };
+
   return (
     <div className={`${styles.step} ${styles[status]}`}>
-      <span>{icons[status]}</span>
-      <span>{label}</span>
+      <span className={styles.stepIcon}>{icons[status]}</span>
+      <span className={styles.stepLabel}>{label}</span>
     </div>
   );
 }

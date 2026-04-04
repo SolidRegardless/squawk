@@ -6,21 +6,26 @@ class RelayConnection {
   private ws: WebSocket | null = null;
   private handlers = new Set<MessageHandler>();
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-  private _url: string;
+  private _connected = false;
 
-  constructor() {
+  private getUrl(): string {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    this._url = `${protocol}//${window.location.host}/ws`;
+    return `${protocol}//${window.location.host}/ws`;
+  }
+
+  isConnected(): boolean {
+    return this._connected && this.ws?.readyState === WebSocket.OPEN;
   }
 
   connect() {
-    if (this.ws?.readyState === WebSocket.OPEN) return;
+    if (this.ws?.readyState === WebSocket.OPEN || this.ws?.readyState === WebSocket.CONNECTING) return;
 
     try {
-      this.ws = new WebSocket(this._url);
+      this.ws = new WebSocket(this.getUrl());
 
       this.ws.onopen = () => {
         console.log('[relay] Connected');
+        this._connected = true;
         if (this.reconnectTimer) {
           clearTimeout(this.reconnectTimer);
           this.reconnectTimer = null;
@@ -39,25 +44,17 @@ class RelayConnection {
       };
 
       this.ws.onclose = () => {
-        console.log('[relay] Disconnected, reconnecting in 3s...');
-        this.scheduleReconnect();
+        console.log('[relay] Disconnected');
+        this._connected = false;
       };
 
       this.ws.onerror = (err) => {
         console.error('[relay] Error:', err);
+        this._connected = false;
       };
     } catch (err) {
       console.error('[relay] Failed to connect:', err);
-      this.scheduleReconnect();
-    }
-  }
-
-  private scheduleReconnect() {
-    if (!this.reconnectTimer) {
-      this.reconnectTimer = setTimeout(() => {
-        this.reconnectTimer = null;
-        this.connect();
-      }, 3000);
+      this._connected = false;
     }
   }
 
@@ -79,6 +76,7 @@ class RelayConnection {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
+    this._connected = false;
     this.ws?.close();
     this.ws = null;
   }

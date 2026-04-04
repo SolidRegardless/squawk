@@ -60,6 +60,16 @@
   border-radius: var(--sq-radius-sm);
 }
 
+.stepIcon {
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+}
+
+.stepLabel {
+  flex: 1;
+}
+
 .active {
   color: var(--sq-accent-orange);
   background: rgba(255, 167, 38, 0.08);
