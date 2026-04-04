@@ -4,6 +4,7 @@ import styles from './ConnectingScreen.module.css';
 
 interface Props {
   onBack: () => void;
+  onReconnect: () => void;
 }
 
 const STEP_LABELS: Record<ConnectionStep, string> = {
@@ -16,7 +17,7 @@ const STEP_LABELS: Record<ConnectionStep, string> = {
 
 const STEP_ORDER: ConnectionStep[] = ['relay', 'resolve', 'handshake', 'auth', 'roster'];
 
-export function ConnectingScreen({ onBack }: Props) {
+export function ConnectingScreen({ onBack, onReconnect }: Props) {
   const status = useAccountStore((s) => s.connectionStatus);
   const error = useAccountStore((s) => s.connectionError);
   const steps = useAccountStore((s) => s.connectionSteps);
@@ -29,6 +30,7 @@ export function ConnectingScreen({ onBack }: Props) {
   const handleRetry = () => {
     if (activeAccount) {
       connect(activeAccount.password);
+      onReconnect();
     }
   };
 

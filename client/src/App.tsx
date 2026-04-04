@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAccountStore } from './stores/accountStore.tsx';
 import { SplashScreen } from './components/splash/SplashScreen.tsx';
 import { AccountSetup } from './components/accounts/AccountSetup.tsx';
@@ -21,7 +21,7 @@ export function App() {
   }, [loadAccounts]);
 
   // After splash, decide where to go
-  const handleSplashDone = () => {
+  const handleSplashDone = useCallback(() => {
     if (accounts.length === 0) {
       setPhase('setup');
     } else {
@@ -32,24 +32,48 @@ export function App() {
         setPhase('password-prompt');
       }
     }
-  };
+  }, [accounts, activeId]);
 
   // After account created
-  const handleAccountCreated = () => {
+  const handleAccountCreated = useCallback(() => {
     setPhase('connecting');
-  };
+  }, []);
 
   // After password entered
-  const handlePasswordEntered = () => {
+  const handlePasswordEntered = useCallback(() => {
     setPhase('connecting');
-  };
+  }, []);
 
-  // Watch connection status
+  // Navigate to setup (edit account)
+  const handleGoToSetup = useCallback(() => {
+    setPhase('setup');
+  }, []);
+
+  // Reconnect — go back through the connecting flow
+  const handleReconnect = useCallback(() => {
+    setPhase('connecting');
+  }, []);
+
+  // Watch connection status changes
   useEffect(() => {
     if (phase === 'connecting' && status === 'connected') {
       setPhase('connected');
     }
-  }, [phase, status]);
+    // If disconnected while on connected screen, go back
+    if (phase === 'connected' && status === 'disconnected') {
+      if (accounts.length === 0) {
+        setPhase('setup');
+      } else {
+        const active = accounts.find((a) => a.id === activeId) ?? accounts[0];
+        if (active.savePassword && active.password) {
+          // Don't auto-reconnect — show setup so they can choose
+          setPhase('connecting');
+        } else {
+          setPhase('password-prompt');
+        }
+      }
+    }
+  }, [phase, status, accounts, activeId]);
 
   switch (phase) {
     case 'splash':
@@ -59,8 +83,8 @@ export function App() {
     case 'password-prompt':
       return <PasswordPrompt onSubmit={handlePasswordEntered} />;
     case 'connecting':
-      return <ConnectingScreen onBack={() => setPhase('setup')} />;
+      return <ConnectingScreen onBack={handleGoToSetup} onReconnect={handleReconnect} />;
     case 'connected':
-      return <ChatShell />;
+      return <ChatShell onReconnect={handleReconnect} />;
   }
 }

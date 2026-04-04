@@ -115,6 +115,9 @@
 .sidebarFooter {
   padding: 16px 20px;
   border-top: 1px solid var(--sq-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .footerBtn {
@@ -132,6 +135,11 @@
 }
 
 .footerBtn:hover {
+  border-color: var(--sq-accent-primary);
+  color: var(--sq-accent-primary);
+}
+
+.disconnectBtn:hover {
   border-color: var(--sq-accent-coral);
   color: var(--sq-accent-coral);
 }
