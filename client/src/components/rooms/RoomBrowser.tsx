@@ -64,9 +64,11 @@ export function RoomBrowser({ onClose }: Props) {
             onChange={(e) => setServer(e.target.value)}
             hint="The MUC service hostname"
           />
-          <Button onClick={handleSearch} loading={loading} size="sm">
-            Fetch
-          </Button>
+          <div className={styles.fetchBtnWrap}>
+            <Button onClick={handleSearch} loading={loading} size="sm">
+              Fetch
+            </Button>
+          </div>
         </div>
 
         {availableRooms.length > 0 && (
