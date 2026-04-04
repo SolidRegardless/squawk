@@ -70,7 +70,7 @@ export function Sidebar({ onDisconnect, onBrowseRooms }: Props) {
       {/* Account header */}
       <div className={styles.header}>
         <div className={styles.headerTop}>
-          <span className={styles.logo}>🦜</span>
+          <img src="/logo.png" alt="Squawk" className={styles.logo} />
           <span className={styles.brand}>Squawk</span>
         </div>
         <div className={styles.accountRow}>

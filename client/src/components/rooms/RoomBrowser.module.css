@@ -63,6 +63,10 @@
   flex: 1;
 }
 
+.serverRow > button {
+  margin-bottom: 6px;
+}
+
 .searchRow {
   padding: 0 24px 8px;
 }

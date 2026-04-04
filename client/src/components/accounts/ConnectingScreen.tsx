@@ -41,7 +41,10 @@ export function ConnectingScreen({ onBack }: Props) {
         {!isError && (
           <>
             <div className={styles.spinner}>
-              <span className={styles.parrot}>{allDone ? '✅' : '🦜'}</span>
+              {allDone
+                ? <span className={styles.parrot}>✅</span>
+                : <img src="/logo.png" alt="Squawk" className={styles.parrotImg} />
+              }
             </div>
             <h2 className={styles.title}>{allDone ? 'Connected!' : 'Connecting...'}</h2>
             <p className={styles.info}>

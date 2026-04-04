@@ -21,7 +21,11 @@
   margin-bottom: 12px;
 }
 
-.logo { font-size: 24px; }
+.logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
 
 .brand {
   font-size: 20px;

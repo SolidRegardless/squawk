@@ -110,7 +110,7 @@ export function AccountSetup({ onCreated, onCancel, editAccountId }: Props) {
     <div className={styles.container}>
       <div className={styles.card}>
         <div className={styles.header}>
-          <span className={styles.emoji}>🦜</span>
+          <img src="/logo.png" alt="Squawk" className={styles.logoImg} />
           <h1 className={styles.title}>
             {isEditing ? 'Edit Account' : 'Welcome to Squawk'}
           </h1>

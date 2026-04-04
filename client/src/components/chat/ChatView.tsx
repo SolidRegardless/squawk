@@ -107,7 +107,7 @@ export function ChatView({ target, targetName, messages, onSend, isRoom, partici
 export function EmptyChat() {
   return (
     <div className={styles.empty}>
-      <span className={styles.emptyEmoji}>🦜</span>
+      <img src="/logo.png" alt="Squawk" className={styles.emptyLogo} />
       <h2 className={styles.emptyTitle}>Pick a conversation</h2>
       <p className={styles.emptyText}>Select a chat, room, or contact from the sidebar</p>
     </div>

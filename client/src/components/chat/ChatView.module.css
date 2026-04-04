@@ -196,6 +196,13 @@
   margin-bottom: 16px;
 }
 
+.emptyLogo {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  margin-bottom: 16px;
+}
+
 .emptyTitle {
   font-size: 22px;
   font-weight: 800;

@@ -34,6 +34,13 @@
   margin-bottom: 12px;
 }
 
+.logoImg {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  margin-bottom: 12px;
+}
+
 .title {
   font-size: 28px;
   font-weight: 800;

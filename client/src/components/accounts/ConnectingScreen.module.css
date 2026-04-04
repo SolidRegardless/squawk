@@ -30,6 +30,13 @@
   animation: wobble 1s ease infinite;
 }
 
+.parrotImg {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  animation: wobble 1s ease infinite;
+}
+
 .title {
   font-size: 24px;
   font-weight: 800;
