@@ -1,4 +1,11 @@
+import { useEffect, useState } from 'react';
 import { useAccountStore } from '../../stores/accountStore.tsx';
+import { useRosterStore } from '../../stores/rosterStore.js';
+import { useChatStore } from '../../stores/chatStore.js';
+import { useMucStore } from '../../stores/mucStore.js';
+import { Sidebar } from './Sidebar.tsx';
+import { ChatView, EmptyChat } from '../chat/ChatView.tsx';
+import { RoomBrowser } from '../rooms/RoomBrowser.tsx';
 import styles from './ChatShell.module.css';
 
 interface Props {
@@ -8,61 +15,79 @@ interface Props {
 export function ChatShell({ onDisconnect }: Props) {
   const accounts = useAccountStore((s) => s.accounts);
   const activeId = useAccountStore((s) => s.activeAccountId);
-  const status = useAccountStore((s) => s.connectionStatus);
-  const disconnect = useAccountStore((s) => s.disconnect);
-
   const account = accounts.find((a) => a.id === activeId);
 
-  const handleDisconnect = () => {
-    disconnect();
-    onDisconnect();
-  };
+  const contacts = useRosterStore((s) => s.contacts);
+  const rosterInit = useRosterStore((s) => s.init);
+
+  const activeChat = useChatStore((s) => s.activeChat);
+  const conversations = useChatStore((s) => s.conversations);
+  const sendChatMessage = useChatStore((s) => s.sendMessage);
+  const chatInit = useChatStore((s) => s.init);
+
+  const activeRoom = useMucStore((s) => s.activeRoom);
+  const joinedRooms = useMucStore((s) => s.joinedRooms);
+  const mucMessages = useMucStore((s) => s.messages);
+  const sendMucMessage = useMucStore((s) => s.sendMessage);
+  const mucInit = useMucStore((s) => s.init);
+
+  const [showRoomBrowser, setShowRoomBrowser] = useState(false);
+
+  // Init stores
+  useEffect(() => {
+    const unsubs = [
+      rosterInit(),
+      chatInit(),
+      mucInit(account?.domain || ''),
+    ];
+    return () => unsubs.forEach((u) => u());
+  }, []);
+
+  // Determine active view
+  const hasActiveChat = !!activeChat;
+  const hasActiveRoom = !!activeRoom;
+
+  let chatContent;
+
+  if (hasActiveRoom && joinedRooms[activeRoom!]) {
+    const room = joinedRooms[activeRoom!];
+    chatContent = (
+      <ChatView
+        target={activeRoom!}
+        targetName={room.name}
+        messages={mucMessages[activeRoom!] || []}
+        onSend={(body) => sendMucMessage(activeRoom!, body)}
+        isRoom
+        participants={room.participants}
+        subject={room.subject}
+      />
+    );
+  } else if (hasActiveChat) {
+    const contact = contacts.find((c) => c.jid === activeChat);
+    chatContent = (
+      <ChatView
+        target={activeChat!}
+        targetName={contact?.name || activeChat!.split('@')[0]}
+        messages={conversations[activeChat!] || []}
+        onSend={(body) => sendChatMessage(activeChat!, body)}
+      />
+    );
+  } else {
+    chatContent = <EmptyChat />;
+  }
 
   return (
     <div className={styles.shell}>
-      {/* Sidebar */}
-      <aside className={styles.sidebar}>
-        <div className={styles.sidebarHeader}>
-          <span className={styles.logo}>🦜</span>
-          <span className={styles.brand}>Squawk</span>
-        </div>
-
-        <div className={styles.accountCard}>
-          <div className={styles.accountInfo}>
-            <span className={styles.accountName}>{account?.username}</span>
-            <span className={styles.accountDomain}>@{account?.domain}</span>
-          </div>
-          <span className={`${styles.statusDot} ${styles[status]}`} title={status} />
-        </div>
-
-        <div className={styles.contactsPlaceholder}>
-          <span className={styles.placeholderEmoji}>🎉</span>
-          <p className={styles.placeholderText}>Connected!</p>
-          <p className={styles.placeholderHint}>
-            Contacts and chats will appear here in Phase 2
-          </p>
-        </div>
-
-        <div className={styles.sidebarFooter}>
-          <button className={`${styles.footerBtn} ${styles.disconnectBtn}`} onClick={handleDisconnect}>
-            Disconnect
-          </button>
-        </div>
-      </aside>
-
-      {/* Main content */}
+      <Sidebar
+        onDisconnect={onDisconnect}
+        onBrowseRooms={() => setShowRoomBrowser(true)}
+      />
       <main className={styles.main}>
-        <div className={styles.emptyState}>
-          <span className={styles.emptyEmoji}>🦜</span>
-          <h2 className={styles.emptyTitle}>You're in!</h2>
-          <p className={styles.emptyText}>
-            Connected as <strong>{account?.username}@{account?.domain}</strong>
-          </p>
-          <p className={styles.emptyHint}>
-            Chat features coming in Phase 2. For now, your XMPP connection is live.
-          </p>
-        </div>
+        {chatContent}
       </main>
+      {showRoomBrowser && (
+        <RoomBrowser onClose={() => setShowRoomBrowser(false)} />
+      )}
     </div>
   );
 }

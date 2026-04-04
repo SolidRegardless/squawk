@@ -1,11 +1,51 @@
-import type { AccountConfig, AccountStatus, AccountCreateInput } from './account.js';
+import type { AccountConfig, AccountStatus } from './account.js';
 
-// ── Client → Relay ──────────────────────────────────────────────
+// ── Shared types ────────────────────────────────────────────
+
+export interface Contact {
+  jid: string;
+  name?: string;
+  subscription?: string;
+  groups: string[];
+  presence: PresenceInfo;
+}
+
+export interface PresenceInfo {
+  show: 'chat' | 'away' | 'xa' | 'dnd' | 'offline';
+  status?: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  from: string;
+  to: string;
+  body: string;
+  timestamp: string;
+  /** For MUC: the sender's nickname */
+  nick?: string;
+  /** Whether this was sent by us */
+  mine?: boolean;
+}
+
+export interface RoomInfo {
+  jid: string;
+  name: string;
+  description?: string;
+  occupants?: number;
+}
+
+export interface RoomDetail {
+  jid: string;
+  name: string;
+  subject?: string;
+  participants: string[];
+}
+
+// ── Client → Relay ──────────────────────────────────────────
 
 export interface ConnectMessage {
   type: 'connect';
   accountId: string;
-  /** Required if password not saved on account */
   password?: string;
 }
 
@@ -19,9 +59,57 @@ export interface AccountSyncMessage {
   accounts: AccountConfig[];
 }
 
-export type ClientMessage = ConnectMessage | DisconnectMessage | AccountSyncMessage;
+export interface RosterGetMessage {
+  type: 'roster:get';
+}
 
-// ── Relay → Client ──────────────────────────────────────────────
+export interface PresenceSetMessage {
+  type: 'presence:set';
+  show: PresenceInfo['show'];
+  status?: string;
+}
+
+export interface MessageSendMessage {
+  type: 'message:send';
+  to: string;
+  body: string;
+}
+
+export interface MucListMessage {
+  type: 'muc:list';
+  server: string;
+}
+
+export interface MucJoinMessage {
+  type: 'muc:join';
+  room: string;
+  nick: string;
+}
+
+export interface MucLeaveMessage {
+  type: 'muc:leave';
+  room: string;
+}
+
+export interface MucSendMessage {
+  type: 'muc:send';
+  room: string;
+  body: string;
+}
+
+export type ClientMessage =
+  | ConnectMessage
+  | DisconnectMessage
+  | AccountSyncMessage
+  | RosterGetMessage
+  | PresenceSetMessage
+  | MessageSendMessage
+  | MucListMessage
+  | MucJoinMessage
+  | MucLeaveMessage
+  | MucSendMessage;
+
+// ── Relay → Client ──────────────────────────────────────────
 
 export interface StatusMessage {
   type: 'status';
@@ -49,8 +137,60 @@ export interface ErrorMessage {
   details?: string;
 }
 
-export type RelayMessage = StatusMessage | ConnectedMessage | StepMessage | ErrorMessage;
+export interface RosterMessage {
+  type: 'roster';
+  contacts: Contact[];
+}
 
-// ── Union ───────────────────────────────────────────────────────
+export interface PresenceMessage {
+  type: 'presence';
+  jid: string;
+  presence: PresenceInfo;
+}
+
+export interface IncomingMessage {
+  type: 'message';
+  message: ChatMessage;
+}
+
+export interface MucRoomsMessage {
+  type: 'muc:rooms';
+  server: string;
+  rooms: RoomInfo[];
+}
+
+export interface MucJoinedMessage {
+  type: 'muc:joined';
+  room: RoomDetail;
+}
+
+export interface MucMessageMessage {
+  type: 'muc:message';
+  room: string;
+  message: ChatMessage;
+}
+
+export interface MucPresenceMessage {
+  type: 'muc:presence';
+  room: string;
+  nick: string;
+  action: 'join' | 'leave';
+  jid?: string;
+}
+
+export type RelayMessage =
+  | StatusMessage
+  | ConnectedMessage
+  | StepMessage
+  | ErrorMessage
+  | RosterMessage
+  | PresenceMessage
+  | IncomingMessage
+  | MucRoomsMessage
+  | MucJoinedMessage
+  | MucMessageMessage
+  | MucPresenceMessage;
+
+// ── Union ───────────────────────────────────────────────────
 
 export type SquawkMessage = ClientMessage | RelayMessage;

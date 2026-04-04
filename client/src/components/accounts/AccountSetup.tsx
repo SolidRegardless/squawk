@@ -58,7 +58,7 @@ export function AccountSetup({ onCreated, onCancel, editAccountId }: Props) {
     if (!username.trim()) errs.username = 'Username is required';
     if (!domain.trim()) errs.domain = 'Domain is required';
     else if (!/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(domain.trim())) {
-      errs.domain = 'Enter a valid domain (e.g. goonfleet.com)';
+      errs.domain = 'Enter a valid domain (e.g. your_domain.com)';
     }
     if (!password && !isEditing) errs.password = 'Password is required to connect';
     if (port && isNaN(Number(port))) errs.port = 'Port must be a number';
@@ -140,7 +140,7 @@ export function AccountSetup({ onCreated, onCancel, editAccountId }: Props) {
 
           <Input
             label="Domain"
-            placeholder="goonfleet.com"
+            placeholder="your_domain.com"
             value={domain}
             onChange={(e) => setDomain(e.target.value)}
             error={errors.domain}

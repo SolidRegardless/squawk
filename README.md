@@ -22,7 +22,7 @@ flowchart LR
     end
 
     subgraph Remote["🌐 XMPP Server"]
-        Jabber["Any XMPP Server\n(Goonfleet, Prosody, etc.)"]
+        Jabber["Any XMPP Server\n(Prosody, ejabberd, etc.)"]
     end
 
     UI <-->|State & Events| WS
@@ -53,7 +53,7 @@ flowchart TD
     subgraph AccountConfig["📋 Account Configuration"]
         Proto["Protocol: XMPP"]
         User["Username"]
-        Domain["Domain\n(e.g. goonfleet.com)"]
+        Domain["Domain\n(e.g. your_domain.com)"]
         Resource["Resource (optional)\n(e.g. 'squawk-web')"]
         Pass["Password\n(save optional)"]
     end

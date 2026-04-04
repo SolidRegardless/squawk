@@ -12,7 +12,6 @@ const PORT = Number(process.env.RELAY_PORT) || 3001;
 const app = express();
 app.use(express.json());
 
-// Health endpoint
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', uptime: process.uptime() });
 });
@@ -31,7 +30,6 @@ wss.on('connection', (ws: WebSocket) => {
     }
   };
 
-  // Forward XMPP events to this client
   const unsubscribe = xmppManager.onEvent(send);
 
   ws.on('message', async (raw) => {
@@ -48,6 +46,27 @@ wss.on('connection', (ws: WebSocket) => {
           break;
         case 'account:sync':
           xmppManager.syncAccounts(msg.accounts);
+          break;
+        case 'roster:get':
+          await xmppManager.getRoster();
+          break;
+        case 'presence:set':
+          await xmppManager.setPresence(msg.show, msg.status);
+          break;
+        case 'message:send':
+          await xmppManager.sendMessage(msg.to, msg.body);
+          break;
+        case 'muc:list':
+          await xmppManager.listRooms(msg.server);
+          break;
+        case 'muc:join':
+          await xmppManager.joinRoom(msg.room, msg.nick);
+          break;
+        case 'muc:leave':
+          await xmppManager.leaveRoom(msg.room);
+          break;
+        case 'muc:send':
+          await xmppManager.sendMucMessage(msg.room, msg.body);
           break;
         default:
           send({ type: 'error', code: 'UNKNOWN_MESSAGE', message: `Unknown message type` });
