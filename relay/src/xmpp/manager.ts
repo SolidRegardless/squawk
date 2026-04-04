@@ -74,17 +74,39 @@ export class XmppManager {
     const server = account.connectServer || account.domain;
     const port = account.port || 5222;
 
+    const security = account.security || 'require-tls';
+    const transport = account.transport || 'tcp';
+
     this.emitStatus(accountId, 'connecting');
-    console.log(`[xmpp] Connecting ${fullJid} → ${server}:${port}`);
+
+    console.log(`[xmpp] ═══════════════════════════════════════════`);
+    console.log(`[xmpp] Connection attempt for account: ${accountId}`);
+    console.log(`[xmpp] ───────────────────────────────────────────`);
+    console.log(`[xmpp]   JID:            ${fullJid}`);
+    console.log(`[xmpp]   Username:       ${account.username}`);
+    console.log(`[xmpp]   Domain:         ${account.domain}`);
+    console.log(`[xmpp]   Resource:       ${resource}`);
+    console.log(`[xmpp]   Connect Server: ${server}`);
+    console.log(`[xmpp]   Port:           ${port}`);
+    console.log(`[xmpp]   Transport:      ${transport}`);
+    console.log(`[xmpp]   Security:       ${security}`);
+    console.log(`[xmpp]   Save Password:  ${account.savePassword}`);
+    console.log(`[xmpp]   Service URL:    xmpp://${server}:${port}`);
+    console.log(`[xmpp]   NODE_TLS_REJECT_UNAUTHORIZED: ${process.env.NODE_TLS_REJECT_UNAUTHORIZED}`);
+    console.log(`[xmpp] ═══════════════════════════════════════════`);
 
     try {
-      const xmpp = client({
+      const clientConfig: any = {
         service: `xmpp://${server}:${port}`,
         domain: account.domain,
         resource,
         username: account.username,
         password,
-      });
+      };
+
+      console.log(`[xmpp] Client config:`, JSON.stringify({ ...clientConfig, password: '***' }, null, 2));
+
+      const xmpp = client(clientConfig);
 
       const managed: ManagedConnection = {
         xmpp,
@@ -93,8 +115,29 @@ export class XmppManager {
       };
       this.connections.set(accountId, managed);
 
+      // Log ALL events for debugging
       xmpp.on('status', (status: string) => {
-        console.log(`[xmpp] Status: ${status}`);
+        console.log(`[xmpp] Status change: ${status}`);
+      });
+
+      xmpp.on('input', (data: string) => {
+        console.log(`[xmpp] ← RECV:`, data.substring(0, 500));
+      });
+
+      xmpp.on('output', (data: string) => {
+        console.log(`[xmpp] → SEND:`, data.substring(0, 500));
+      });
+
+      xmpp.on('connect', () => {
+        console.log(`[xmpp] TCP connected to ${server}:${port}`);
+      });
+
+      xmpp.on('open', () => {
+        console.log(`[xmpp] XMPP stream opened`);
+      });
+
+      xmpp.on('close', () => {
+        console.log(`[xmpp] XMPP stream closed`);
       });
 
       xmpp.on('online', (address: any) => {
