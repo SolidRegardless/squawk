@@ -141,6 +141,11 @@
   color: var(--sq-accent-primary);
 }
 
+.swiped .connectArrow {
+  transform: rotate(180deg) !important;
+  color: var(--sq-accent-primary);
+}
+
 /* ── Context menu (desktop) ───────────────────────────────── */
 .contextMenu {
   position: absolute;

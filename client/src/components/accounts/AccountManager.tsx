@@ -105,7 +105,16 @@ export function AccountManager({ onConnect, onAddAccount, onEditAccount }: Props
                     {account.resource ? ` · ${account.resource}` : ''}
                   </span>
                 </div>
-                <span className={styles.connectArrow}>›</span>
+                <span
+                className={styles.connectArrow}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSwipedId(swipedId === account.id ? null : account.id);
+                }}
+                title="More options"
+              >
+                ›
+              </span>
               </div>
 
               {/* Swipe-revealed actions (mobile) */}
