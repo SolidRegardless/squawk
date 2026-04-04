@@ -3,9 +3,10 @@ import styles from './ChatShell.module.css';
 
 interface Props {
   onReconnect: () => void;
+  onDisconnect: () => void;
 }
 
-export function ChatShell({ onReconnect }: Props) {
+export function ChatShell({ onReconnect, onDisconnect }: Props) {
   const accounts = useAccountStore((s) => s.accounts);
   const activeId = useAccountStore((s) => s.activeAccountId);
   const status = useAccountStore((s) => s.connectionStatus);
@@ -16,6 +17,7 @@ export function ChatShell({ onReconnect }: Props) {
 
   const handleDisconnect = () => {
     disconnect();
+    onDisconnect();
   };
 
   const handleReconnect = () => {

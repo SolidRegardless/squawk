@@ -153,6 +153,16 @@
   color: var(--sq-text-disabled);
 }
 
+.formActions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.formActions > * {
+  flex: 1;
+}
+
 .formError {
   color: var(--sq-accent-coral);
   font-size: 13px;

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useAccountStore } from '../../stores/accountStore.tsx';
 import { Input } from '../shared/Input.tsx';
 import { Button } from '../shared/Button.tsx';
@@ -7,11 +7,20 @@ import styles from './AccountSetup.module.css';
 
 interface Props {
   onCreated: () => void;
+  onCancel?: () => void;
+  /** If provided, we're editing this account */
+  editAccountId?: string | null;
 }
 
-export function AccountSetup({ onCreated }: Props) {
+export function AccountSetup({ onCreated, onCancel, editAccountId }: Props) {
   const createAccount = useAccountStore((s) => s.createAccount);
+  const updateAccount = useAccountStore((s) => s.updateAccount);
   const connect = useAccountStore((s) => s.connect);
+  const accounts = useAccountStore((s) => s.accounts);
+  const setActive = useAccountStore((s) => s.setActive);
+
+  const editAccount = editAccountId ? accounts.find((a) => a.id === editAccountId) : null;
+  const isEditing = !!editAccount;
 
   const [username, setUsername] = useState('');
   const [domain, setDomain] = useState('');
@@ -26,6 +35,24 @@ export function AccountSetup({ onCreated }: Props) {
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Populate form when editing
+  useEffect(() => {
+    if (editAccount) {
+      setUsername(editAccount.username);
+      setDomain(editAccount.domain);
+      setResource(editAccount.resource || '');
+      setPassword(editAccount.password || '');
+      setSavePassword(editAccount.savePassword);
+      setPort(String(editAccount.port || 5222));
+      setTransport(editAccount.transport || 'tcp');
+      setRequireEncryption(editAccount.security !== 'allow-plaintext' && editAccount.security !== 'none');
+      setConnectServer(editAccount.connectServer || '');
+      if (editAccount.resource || editAccount.transport !== 'tcp' || editAccount.connectServer) {
+        setShowAdvanced(true);
+      }
+    }
+  }, [editAccount]);
+
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
     if (!username.trim()) errs.username = 'Username is required';
@@ -33,7 +60,7 @@ export function AccountSetup({ onCreated }: Props) {
     else if (!/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(domain.trim())) {
       errs.domain = 'Enter a valid domain (e.g. goonfleet.com)';
     }
-    if (!password) errs.password = 'Password is required to connect';
+    if (!password && !isEditing) errs.password = 'Password is required to connect';
     if (port && isNaN(Number(port))) errs.port = 'Port must be a number';
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -45,19 +72,33 @@ export function AccountSetup({ onCreated }: Props) {
 
     setSaving(true);
     try {
-      await createAccount({
-        protocol: 'xmpp',
+      const accountData = {
+        protocol: 'xmpp' as const,
         username: username.trim(),
         domain: domain.trim(),
         resource: resource.trim() || undefined,
         savePassword,
-        password,
+        password: password || undefined,
         transport,
         port: port ? Number(port) : undefined,
-        security: requireEncryption ? 'require-tls' : 'allow-plaintext',
+        security: requireEncryption ? 'require-tls' as const : 'allow-plaintext' as const,
         connectServer: connectServer.trim() || undefined,
-      });
-      connect(password);
+      };
+
+      if (isEditing && editAccountId) {
+        await updateAccount(editAccountId, {
+          ...accountData,
+          password: savePassword ? (password || editAccount?.password) : undefined,
+        });
+        setActive(editAccountId);
+      } else {
+        await createAccount({
+          ...accountData,
+          password: password,
+        });
+      }
+
+      connect(password || editAccount?.password);
       onCreated();
     } catch (err) {
       setErrors({ form: 'Failed to save account. Try again.' });
@@ -70,8 +111,14 @@ export function AccountSetup({ onCreated }: Props) {
       <div className={styles.card}>
         <div className={styles.header}>
           <span className={styles.emoji}>🦜</span>
-          <h1 className={styles.title}>Welcome to Squawk</h1>
-          <p className={styles.subtitle}>Set up your XMPP account to get started</p>
+          <h1 className={styles.title}>
+            {isEditing ? 'Edit Account' : 'Welcome to Squawk'}
+          </h1>
+          <p className={styles.subtitle}>
+            {isEditing
+              ? `Editing ${editAccount?.username}@${editAccount?.domain}`
+              : 'Set up your XMPP account to get started'}
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
@@ -104,12 +151,12 @@ export function AccountSetup({ onCreated }: Props) {
           <Input
             label="Password"
             type="password"
-            placeholder="••••••••"
+            placeholder={isEditing ? '(unchanged)' : '••••••••'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             error={errors.password}
             autoComplete="current-password"
-            required
+            required={!isEditing}
           />
 
           <Toggle
@@ -188,9 +235,16 @@ export function AccountSetup({ onCreated }: Props) {
             <p className={styles.formError}>{errors.form}</p>
           )}
 
-          <Button type="submit" size="lg" loading={saving}>
-            Connect
-          </Button>
+          <div className={styles.formActions}>
+            {onCancel && (
+              <Button type="button" variant="ghost" size="lg" onClick={onCancel}>
+                Cancel
+              </Button>
+            )}
+            <Button type="submit" size="lg" loading={saving}>
+              {isEditing ? 'Save & Connect' : 'Connect'}
+            </Button>
+          </div>
         </form>
       </div>
     </div>
