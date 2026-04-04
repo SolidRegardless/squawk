@@ -294,8 +294,12 @@
   right: 0;
   width: 70px;
   height: 100%;
-  display: flex;
+  display: none;
   z-index: 0;
+}
+
+.roomSwiped .roomActions {
+  display: flex;
 }
 
 .leaveBtn {
@@ -317,10 +321,7 @@
   filter: brightness(1.1);
 }
 
-/* Hide swipe on desktop, show arrow menu */
-@media (pointer: coarse) {
-  .roomArrow { display: none; }
-}
+
 
 .browseBtn {
   margin: 8px 12px;
