@@ -9,12 +9,12 @@
 
 .card {
   width: 100%;
-  max-width: 500px;
+  max-width: 480px;
   background: var(--sq-bg-surface);
   border: 1px solid var(--sq-border);
   border-radius: var(--sq-radius-lg);
   box-shadow: var(--sq-shadow-lg);
-  padding: 40px 36px;
+  padding: 40px 32px;
   animation: sq-fadeIn 400ms ease forwards;
 }
 
@@ -36,7 +36,7 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .subtitle {
@@ -44,50 +44,51 @@
   font-size: 14px;
 }
 
-/* Account list */
+/* ── Account list ─────────────────────────────────────────── */
 .accountList {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   margin-bottom: 24px;
   max-height: 360px;
   overflow-y: auto;
 }
 
+.accountRow {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--sq-radius-md);
+}
+
+/* ── Account item ─────────────────────────────────────────── */
 .accountItem {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 14px;
   padding: 14px 16px;
   border: 1.5px solid var(--sq-border);
   border-radius: var(--sq-radius-md);
   cursor: pointer;
   transition: all var(--sq-transition);
-  gap: 12px;
+  background: var(--sq-bg-surface);
+  position: relative;
+  z-index: 1;
 }
 
 .accountItem:hover {
-  border-color: var(--sq-blue-light);
-  background: var(--sq-bg-elevated);
-}
-
-.accountItem.active {
   border-color: var(--sq-accent-primary);
-  background: rgba(66, 165, 245, 0.06);
-  box-shadow: 0 0 0 2px rgba(66, 165, 245, 0.12);
+  background: rgba(66, 165, 245, 0.04);
+  transform: translateX(0);
 }
 
-.accountLeft {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-  flex: 1;
+.accountItem:active {
+  transform: scale(0.985);
+  background: rgba(66, 165, 245, 0.08);
 }
 
 .avatar {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: var(--sq-radius-full);
   background: linear-gradient(135deg, var(--sq-blue-deep), var(--sq-accent-primary));
   color: white;
@@ -103,10 +104,11 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  flex: 1;
 }
 
 .accountJid {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--sq-text-primary);
   white-space: nowrap;
@@ -114,50 +116,219 @@
   text-overflow: ellipsis;
 }
 
+.accountDomainInline {
+  font-weight: 600;
+  color: var(--sq-text-secondary);
+}
+
 .accountMeta {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--sq-text-disabled);
   font-weight: 600;
+  margin-top: 2px;
 }
 
-/* Action buttons */
-.accountActions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.connectArrow {
+  font-size: 24px;
+  color: var(--sq-blue-light);
+  font-weight: 300;
   flex-shrink: 0;
+  transition: transform var(--sq-transition);
 }
 
-.actionBtn {
+.accountItem:hover .connectArrow {
+  transform: translateX(3px);
+  color: var(--sq-accent-primary);
+}
+
+/* ── Context menu (desktop) ───────────────────────────────── */
+.contextMenu {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+}
+
+.menuDot {
   background: none;
   border: none;
-  font-size: 16px;
-  padding: 4px 6px;
+  color: var(--sq-text-disabled);
+  font-size: 14px;
+  letter-spacing: 1px;
+  padding: 4px 8px;
   cursor: pointer;
   border-radius: var(--sq-radius-sm);
-  transition: background var(--sq-transition);
+  transition: all var(--sq-transition);
   line-height: 1;
 }
 
-.actionBtn:hover {
+.menuDot:hover {
+  background: var(--sq-bg-deep);
+  color: var(--sq-text-secondary);
+}
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: var(--sq-bg-surface);
+  border: 1px solid var(--sq-border);
+  border-radius: var(--sq-radius-md);
+  box-shadow: var(--sq-shadow-md);
+  overflow: hidden;
+  min-width: 140px;
+  animation: sq-fadeIn 150ms ease forwards;
+  z-index: 10;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  font-family: var(--sq-font);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sq-text-primary);
+  cursor: pointer;
+  transition: background var(--sq-transition);
+  text-align: left;
+}
+
+.dropdownItem:hover {
   background: var(--sq-bg-deep);
 }
 
-.deleteBtn:hover {
-  background: rgba(239, 83, 80, 0.1);
+.dropdownDanger {
+  color: var(--sq-accent-coral);
 }
 
-.confirmDelete {
+.dropdownDanger:hover {
+  background: rgba(239, 83, 80, 0.06);
+}
+
+/* ── Swipe actions (mobile) ───────────────────────────────── */
+.swipeActions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
   display: flex;
-  gap: 2px;
+  transform: translateX(100%);
+  transition: transform 200ms ease;
 }
 
-.confirmYes:hover {
-  background: rgba(239, 83, 80, 0.15);
+.swiped .accountItem {
+  transform: translateX(-140px);
+  transition: transform 200ms ease;
 }
 
-/* Footer */
+.swiped .swipeActions {
+  transform: translateX(0);
+}
+
+.swipeEdit,
+.swipeDelete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  font-family: var(--sq-font);
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+  width: 70px;
+}
+
+.swipeEdit {
+  background: var(--sq-accent-primary);
+}
+
+.swipeDelete {
+  background: var(--sq-accent-coral);
+}
+
+/* Hide swipe on desktop, show dots */
+@media (pointer: fine) {
+  .swipeActions {
+    display: none;
+  }
+}
+
+/* Hide dots on touch, use swipe */
+@media (pointer: coarse) {
+  .contextMenu {
+    display: none;
+  }
+}
+
+/* ── Footer ───────────────────────────────────────────────── */
 .footer {
   display: flex;
   justify-content: center;
+}
+
+/* ── Delete dialog overlay ────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: overlayIn 200ms ease forwards;
+  padding: 24px;
+}
+
+.dialog {
+  background: var(--sq-bg-surface);
+  border: 1px solid var(--sq-border);
+  border-radius: var(--sq-radius-lg);
+  box-shadow: var(--sq-shadow-lg);
+  padding: 32px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  animation: sq-fadeIn 200ms ease forwards;
+}
+
+.dialogEmoji {
+  font-size: 40px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.dialogTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--sq-text-primary);
+  margin-bottom: 8px;
+}
+
+.dialogText {
+  font-size: 14px;
+  color: var(--sq-text-secondary);
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.dialogActions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.dialogActions > * {
+  flex: 1;
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
