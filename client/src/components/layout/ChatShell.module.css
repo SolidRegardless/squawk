@@ -1,0 +1,190 @@
+.shell {
+  display: flex;
+  height: 100%;
+}
+
+/* ── Sidebar ────────────────────────────────────────────────── */
+.sidebar {
+  width: 280px;
+  min-width: 280px;
+  background: var(--sq-bg-mid);
+  border-right: 1px solid var(--sq-border);
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--sq-border);
+}
+
+.logo {
+  font-size: 28px;
+}
+
+.brand {
+  font-size: 22px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--sq-accent-teal), var(--sq-accent-green));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.accountCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--sq-border);
+}
+
+.accountInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.accountName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--sq-text-primary);
+}
+
+.accountDomain {
+  font-size: 12px;
+  color: var(--sq-text-secondary);
+}
+
+.statusDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.statusDot.connected {
+  background: var(--sq-accent-green);
+  box-shadow: 0 0 6px rgba(74, 222, 128, 0.5);
+}
+
+.statusDot.connecting {
+  background: var(--sq-accent-gold);
+  animation: sq-pulse 1.4s ease infinite;
+}
+
+.statusDot.disconnected {
+  background: var(--sq-text-disabled);
+}
+
+.statusDot.error {
+  background: var(--sq-accent-coral);
+}
+
+/* Contacts placeholder */
+.contactsPlaceholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  text-align: center;
+}
+
+.placeholderEmoji {
+  font-size: 36px;
+  margin-bottom: 12px;
+}
+
+.placeholderText {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--sq-accent-teal);
+  margin-bottom: 8px;
+}
+
+.placeholderHint {
+  font-size: 12px;
+  color: var(--sq-text-disabled);
+  line-height: 1.5;
+}
+
+.sidebarFooter {
+  padding: 16px 20px;
+  border-top: 1px solid var(--sq-border);
+}
+
+.footerBtn {
+  width: 100%;
+  padding: 8px;
+  background: transparent;
+  border: 1px solid var(--sq-border);
+  border-radius: var(--sq-radius-sm);
+  color: var(--sq-text-secondary);
+  font-family: var(--sq-font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--sq-transition);
+}
+
+.footerBtn:hover {
+  border-color: var(--sq-accent-coral);
+  color: var(--sq-accent-coral);
+}
+
+/* ── Main panel ─────────────────────────────────────────────── */
+.main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sq-bg-deep);
+}
+
+.emptyState {
+  text-align: center;
+  animation: sq-fadeIn 600ms ease forwards;
+}
+
+.emptyEmoji {
+  font-size: 64px;
+  display: block;
+  margin-bottom: 16px;
+}
+
+.emptyTitle {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--sq-accent-teal);
+  margin-bottom: 8px;
+}
+
+.emptyText {
+  font-size: 15px;
+  color: var(--sq-text-primary);
+  margin-bottom: 8px;
+}
+
+.emptyHint {
+  font-size: 13px;
+  color: var(--sq-text-disabled);
+  max-width: 300px;
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    min-width: unset;
+    position: absolute;
+    z-index: 10;
+    height: 100%;
+  }
+  .main {
+    display: none;
+  }
+}

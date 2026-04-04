@@ -1,0 +1,113 @@
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 24px;
+  background: linear-gradient(
+    160deg,
+    var(--sq-bg-deep) 0%,
+    #0a3328 50%,
+    var(--sq-bg-deep) 100%
+  );
+}
+
+.card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--sq-bg-surface);
+  border: 1px solid var(--sq-border);
+  border-radius: var(--sq-radius-lg);
+  box-shadow: var(--sq-shadow-lg);
+  padding: 40px 36px;
+  animation: sq-fadeIn 400ms ease forwards;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.emoji {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--sq-accent-teal), var(--sq-accent-green));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: var(--sq-text-secondary);
+  font-size: 14px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.protocol {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--sq-bg-deep);
+  border-radius: var(--sq-radius-md);
+  border: 1px solid var(--sq-border);
+}
+
+.protocolBadge {
+  background: linear-gradient(135deg, var(--sq-accent-teal), var(--sq-accent-green));
+  color: var(--sq-bg-deep);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: var(--sq-radius-full);
+  letter-spacing: 0.5px;
+}
+
+.protocolHint {
+  color: var(--sq-text-secondary);
+  font-size: 13px;
+}
+
+.advancedToggle {
+  background: none;
+  border: none;
+  color: var(--sq-text-disabled);
+  font-family: var(--sq-font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  transition: color var(--sq-transition);
+}
+
+.advancedToggle:hover {
+  color: var(--sq-text-secondary);
+}
+
+.advanced {
+  padding-left: 12px;
+  border-left: 2px solid var(--sq-border);
+}
+
+.formError {
+  color: var(--sq-accent-coral);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  padding: 8px;
+  background: rgba(251, 113, 133, 0.1);
+  border-radius: var(--sq-radius-sm);
+}

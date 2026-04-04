@@ -1,0 +1,46 @@
+.toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sq-text-primary);
+}
+
+.track {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  background: var(--sq-bg-deep);
+  border: 1.5px solid var(--sq-border);
+  border-radius: var(--sq-radius-full);
+  cursor: pointer;
+  transition: all var(--sq-transition);
+  padding: 0;
+}
+
+.track.on {
+  background: var(--sq-accent-teal);
+  border-color: var(--sq-accent-teal);
+}
+
+.thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: var(--sq-text-primary);
+  border-radius: 50%;
+  transition: transform var(--sq-transition);
+}
+
+.on .thumb {
+  transform: translateX(22px);
+  background: var(--sq-bg-deep);
+}

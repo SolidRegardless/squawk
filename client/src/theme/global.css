@@ -1,0 +1,105 @@
+/* ── Squawk Theme — Extracted from splash art ─────────────── */
+/* Deep ocean teals, vibrant jungle greens, warm golden accents */
+
+:root {
+  /* Primary palette — from the parrot splash */
+  --sq-bg-deep:       #0a1e2e;    /* Deep ocean night */
+  --sq-bg-mid:        #0e3a2e;    /* Forest canopy */
+  --sq-bg-surface:    #143d34;    /* Card/panel background */
+  --sq-bg-elevated:   #1a5244;    /* Elevated surface */
+
+  /* Accent colours */
+  --sq-accent-teal:   #2dd4a8;    /* Primary action — teal green */
+  --sq-accent-green:  #4ade80;    /* Success / online */
+  --sq-accent-gold:   #fbbf24;    /* Warning / highlight */
+  --sq-accent-coral:  #fb7185;    /* Error / notification */
+  --sq-accent-sky:    #38bdf8;    /* Info / link */
+  --sq-accent-violet: #a78bfa;    /* Subtle accent */
+
+  /* Text */
+  --sq-text-primary:  #e8f5f0;    /* Main text — light mint */
+  --sq-text-secondary:#8bb5a2;    /* Muted text */
+  --sq-text-disabled: #4a7a6a;    /* Disabled */
+
+  /* Borders & dividers */
+  --sq-border:        #1e5c4a;
+  --sq-border-focus:  #2dd4a8;
+
+  /* Shadows */
+  --sq-shadow-sm:     0 1px 3px rgba(0,0,0,0.4);
+  --sq-shadow-md:     0 4px 12px rgba(0,0,0,0.5);
+  --sq-shadow-lg:     0 8px 24px rgba(0,0,0,0.6);
+
+  /* Radius */
+  --sq-radius-sm:     6px;
+  --sq-radius-md:     12px;
+  --sq-radius-lg:     20px;
+  --sq-radius-full:   9999px;
+
+  /* Font */
+  --sq-font:          'Nunito', system-ui, -apple-system, sans-serif;
+
+  /* Transitions */
+  --sq-transition:    150ms ease;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--sq-font);
+  background: var(--sq-bg-deep);
+  color: var(--sq-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Focus ring ─────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--sq-accent-teal);
+  outline-offset: 2px;
+}
+
+/* ── Scrollbar styling ──────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--sq-border);
+  border-radius: var(--sq-radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--sq-accent-teal);
+}
+
+/* ── Utility animations ─────────────────────────────────────── */
+@keyframes sq-fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sq-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
+
+@keyframes sq-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.sq-animate-in {
+  animation: sq-fadeIn 300ms ease forwards;
+}
