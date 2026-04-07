@@ -15,9 +15,11 @@ interface Props {
   isRoom?: boolean;
   participants?: string[];
   subject?: string;
+  omemoEnabled?: boolean;
+  onToggleOmemo?: () => void;
 }
 
-export function ChatView({ target, targetName, messages, onSend, isRoom, participants, subject }: Props) {
+export function ChatView({ target, targetName, messages, onSend, isRoom, participants, subject, omemoEnabled, onToggleOmemo }: Props) {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -89,6 +91,15 @@ export function ChatView({ target, targetName, messages, onSend, isRoom, partici
               : target}
           </span>
         </div>
+        {!isRoom && onToggleOmemo && (
+          <button
+            className={styles.omemoBtn}
+            onClick={onToggleOmemo}
+            title={omemoEnabled ? 'OMEMO encrypted — click to disable' : 'Click to enable OMEMO encryption'}
+          >
+            {omemoEnabled ? '🔒' : '🔓'}
+          </button>
+        )}
       </div>
 
       {/* Messages */}
@@ -117,6 +128,7 @@ export function ChatView({ target, targetName, messages, onSend, isRoom, partici
                       {msg.status === 'delivered' ? ' ✓✓' : ' ✓'}
                     </span>
                   )}
+                  {msg.encrypted && <span className={styles.encryptedBadge}>🔒</span>}
                 </span>
               </div>
             ))}

@@ -18,6 +18,8 @@ interface ChatState {
   init: () => () => void;
   getUnread: (jid: string) => number;
   clearHistory: (jid: string) => Promise<void>;
+  omemoEnabled: Record<string, boolean>;
+  toggleOmemo: (jid: string) => void;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -26,6 +28,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   typingUsers: {},
   unreadCounts: {},
   deliveredIds: {},
+  omemoEnabled: {},
 
   setActiveChat: (jid) => {
     set({ activeChat: jid });
@@ -41,8 +44,18 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
+  toggleOmemo: (jid) => {
+    const current = get().omemoEnabled;
+    set({ omemoEnabled: { ...current, [jid]: !current[jid] } });
+  },
+
   sendMessage: (to, body) => {
-    relay.send({ type: 'message:send', to, body });
+    const omemoEnabled = get().omemoEnabled[to];
+    if (omemoEnabled) {
+      relay.send({ type: 'message:send-encrypted', to, body });
+    } else {
+      relay.send({ type: 'message:send', to, body });
+    }
   },
 
   sendTypingState: (to, state, isRoom) => {

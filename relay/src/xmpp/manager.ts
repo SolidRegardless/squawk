@@ -2,6 +2,11 @@
 import { client, xml, jid } from '@xmpp/client';
 import type { AccountConfig, AccountStatus } from '../../../shared/src/account.js';
 import type { RelayMessage, Contact, ChatMessage, RoomInfo, PresenceInfo } from '../../../shared/src/messages.js';
+import { SignalStore } from '../omemo/store.js';
+import { initializeStore } from '../omemo/keys.js';
+import { publishDeviceBundle } from '../omemo/publish.js';
+import { encryptMessage } from '../omemo/encrypt.js';
+import { decryptMessage } from '../omemo/decrypt.js';
 
 type EventCallback = (msg: RelayMessage) => void;
 
@@ -21,6 +26,12 @@ export class XmppManager {
   private activeAccountId: string | null = null;
   private contacts = new Map<string, Contact>();
   private joinedRooms = new Set<string>();
+
+  // ── OMEMO state (per accountId) ──────────────────────────────
+  private omemoStores = new Map<string, SignalStore>();
+  private omemoDeviceIds = new Map<string, number>();
+  private omemoPreKeys = new Map<string, any[]>();
+  private omemoSignedPreKeys = new Map<string, any>();
 
   onEvent(cb: EventCallback): () => void {
     this.listeners.add(cb);
@@ -414,6 +425,22 @@ export class XmppManager {
           this.getRoster();
           if (managed.bareJid) this.fetchVCard(managed.bareJid).catch(() => {});
         }, 500);
+
+        // Initialize OMEMO store and publish device bundle
+        (async () => {
+          try {
+            const store = new SignalStore();
+            const { deviceId, preKeys, signedPreKey } = await initializeStore(store);
+            this.omemoStores.set(accountId, store);
+            this.omemoDeviceIds.set(accountId, deviceId);
+            this.omemoPreKeys.set(accountId, preKeys);
+            this.omemoSignedPreKeys.set(accountId, signedPreKey);
+            await publishDeviceBundle(managed.xmpp, store, deviceId, preKeys, signedPreKey);
+            console.log(`[omemo] Device bundle published, deviceId=${deviceId}`);
+          } catch (err) {
+            console.error('[omemo] Failed to initialize OMEMO:', err);
+          }
+        })();
       });
 
       // ── Offline ───────────────────────────────────
@@ -570,6 +597,13 @@ export class XmppManager {
       return;
     }
 
+    // Check for OMEMO encrypted message before the body-empty guard
+    const encryptedEl = stanza.getChild('encrypted', 'eu.siacs.conversations.axolotl');
+    if (encryptedEl) {
+      this.handleOmemoMessage(stanza, conn, encryptedEl);
+      return;
+    }
+
     // Detect chat state notifications (XEP-0085)
     const CSN_NS = 'http://jabber.org/protocol/chatstates';
     for (const state of ['composing', 'paused', 'active', 'inactive', 'gone'] as const) {
@@ -639,6 +673,127 @@ export class XmppManager {
           mine,
         },
       });
+    }
+  }
+
+  private async handleOmemoMessage(stanza: any, conn: ManagedConnection, encryptedEl: any) {
+    const from = stanza.attrs.from || '';
+    const bareFrom = from.split('/')[0];
+    const id = stanza.attrs.id || `rx-${Date.now()}`;
+    const store = this.omemoStores.get(conn.accountId);
+    const deviceId = this.omemoDeviceIds.get(conn.accountId);
+
+    if (!store || !deviceId) {
+      console.warn('[omemo] Store not initialized, skipping encrypted message');
+      return;
+    }
+
+    try {
+      const plaintext = await decryptMessage(encryptedEl, bareFrom, deviceId, store);
+      const mine = bareFrom === conn.bareJid;
+
+      this.emit({
+        type: 'message',
+        message: {
+          id,
+          from: bareFrom,
+          to: mine ? (stanza.attrs.to || '').split('/')[0] : (conn.bareJid || ''),
+          body: plaintext,
+          timestamp: new Date().toISOString(),
+          mine,
+          encrypted: true,
+        },
+      });
+    } catch (err) {
+      console.error('[omemo] Decryption failed:', err);
+    }
+  }
+
+  async sendEncryptedMessage(to: string, plaintext: string): Promise<void> {
+    const conn = this.getActive();
+    if (!conn) return;
+
+    const store = this.omemoStores.get(conn.accountId);
+    const deviceId = this.omemoDeviceIds.get(conn.accountId);
+    if (!store || !deviceId) {
+      console.warn('[omemo] OMEMO not initialized, falling back to plaintext');
+      return this.sendMessage(to, plaintext);
+    }
+
+    try {
+      // TODO: fetch recipient bundle and run X3DH (SessionBuilder) if no session exists
+      const recipientDevices = await this.fetchRecipientDevices(to, conn);
+
+      if (recipientDevices.length === 0) {
+        console.warn('[omemo] No recipient devices found, falling back to plaintext');
+        return this.sendMessage(to, plaintext);
+      }
+
+      const encryptedEl = await encryptMessage(plaintext, to, recipientDevices, store, deviceId);
+      const id = `sq-omemo-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+
+      await conn.xmpp.send(
+        xml('message', { to, type: 'chat', id },
+          encryptedEl,
+          xml('store', { xmlns: 'urn:xmpp:hints' })
+        )
+      );
+
+      // Echo back to client with encrypted flag
+      this.emit({
+        type: 'message',
+        message: {
+          id,
+          from: conn.bareJid || '',
+          to,
+          body: plaintext,
+          timestamp: new Date().toISOString(),
+          mine: true,
+          encrypted: true,
+        },
+      });
+    } catch (err) {
+      console.error('[omemo] Send encrypted message failed:', err);
+    }
+  }
+
+  private async fetchRecipientDevices(
+    recipientJid: string,
+    conn: ManagedConnection
+  ): Promise<Array<{ jid: string; deviceId: number }>> {
+    try {
+      const bareJid = recipientJid.split('/')[0];
+      const iq = xml(
+        'iq',
+        { type: 'get', to: bareJid },
+        xml(
+          'pubsub',
+          { xmlns: 'http://jabber.org/protocol/pubsub' },
+          xml('items', { node: 'eu.siacs.conversations.axolotl.devicelist' })
+        )
+      );
+      const result = await conn.xmpp.iqCaller.request(iq);
+      const items =
+        result.getChild('pubsub')?.getChild('items')?.getChildren('item') || [];
+      const devices: Array<{ jid: string; deviceId: number }> = [];
+
+      for (const item of items) {
+        const list = item.getChild('list', 'eu.siacs.conversations.axolotl');
+        if (!list) continue;
+        for (const device of list.getChildren('device') || []) {
+          const did = parseInt(device.attrs.id, 10);
+          if (!isNaN(did)) {
+            devices.push({ jid: bareJid, deviceId: did });
+          }
+        }
+      }
+
+      // TODO: for each device without an open session, fetch their bundle and
+      //       run X3DH key agreement via SessionBuilder before returning.
+      return devices;
+    } catch (err) {
+      console.error('[omemo] Failed to fetch recipient devices:', err);
+      return [];
     }
   }
 

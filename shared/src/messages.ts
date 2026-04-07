@@ -27,6 +27,8 @@ export interface ChatMessage {
   mine?: boolean;
   /** Delivery status for outgoing 1:1 messages */
   status?: 'sent' | 'delivered';
+  /** True if the message was OMEMO-encrypted (XEP-0384) */
+  encrypted?: boolean;
 }
 
 export interface RoomInfo {
@@ -77,6 +79,12 @@ export interface MessageSendMessage {
   body: string;
 }
 
+export interface MessageSendEncryptedMessage {
+  type: 'message:send-encrypted';
+  to: string;
+  body: string;
+}
+
 export interface MucListMessage {
   type: 'muc:list';
   server: string;
@@ -120,6 +128,7 @@ export type ClientMessage =
   | RosterGetMessage
   | PresenceSetMessage
   | MessageSendMessage
+  | MessageSendEncryptedMessage
   | MucListMessage
   | MucJoinMessage
   | MucLeaveMessage
