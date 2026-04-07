@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, type KeyboardEvent } from 'react';
 import type { ChatMessage } from '../../../../shared/src/messages.js';
+import { relay } from '../../services/relay.js';
 import styles from './ChatView.module.css';
 
 interface Props {
@@ -40,6 +41,10 @@ export function ChatView({ target, targetName, messages, onSend, isRoom, partici
     }
   };
 
+  const handleLoadMore = () => {
+    relay.send({ type: 'history:fetch', jid: target, isRoom: !!isRoom, limit: 50 });
+  };
+
   // Group messages by date
   const grouped = groupByDate(messages);
 
@@ -62,6 +67,11 @@ export function ChatView({ target, targetName, messages, onSend, isRoom, partici
 
       {/* Messages */}
       <div className={styles.messages}>
+        {messages.length >= 10 && (
+          <button className={styles.loadMore} onClick={handleLoadMore}>
+            Load more history
+          </button>
+        )}
         {grouped.map(({ label, msgs }) => (
           <div key={label}>
             <div className={styles.dateLabel}><span>{label}</span></div>

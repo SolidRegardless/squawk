@@ -68,6 +68,13 @@ wss.on('connection', (ws: WebSocket) => {
         case 'muc:send':
           await xmppManager.sendMucMessage(msg.room, msg.body);
           break;
+        case 'history:fetch':
+          if (msg.isRoom) {
+            await xmppManager.fetchMucHistory(msg.jid, msg.limit);
+          } else {
+            await xmppManager.fetchHistory(msg.jid, msg.limit);
+          }
+          break;
         default:
           send({ type: 'error', code: 'UNKNOWN_MESSAGE', message: `Unknown message type` });
       }

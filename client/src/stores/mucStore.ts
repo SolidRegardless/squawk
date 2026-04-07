@@ -46,6 +46,11 @@ export const useMucStore = create<MucState>((set, get) => ({
         rooms[jid] = { ...rooms[jid], unread: 0 };
         set({ joinedRooms: rooms });
       }
+      // Fetch history if sparse
+      const msgs = get().messages[jid] || [];
+      if (msgs.length < 10) {
+        relay.send({ type: 'history:fetch', jid, isRoom: true });
+      }
     }
   },
 

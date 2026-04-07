@@ -97,6 +97,13 @@ export interface MucSendMessage {
   body: string;
 }
 
+export interface HistoryFetchMessage {
+  type: 'history:fetch';
+  jid: string;
+  isRoom: boolean;
+  limit?: number;
+}
+
 export type ClientMessage =
   | ConnectMessage
   | DisconnectMessage
@@ -107,7 +114,8 @@ export type ClientMessage =
   | MucListMessage
   | MucJoinMessage
   | MucLeaveMessage
-  | MucSendMessage;
+  | MucSendMessage
+  | HistoryFetchMessage;
 
 // ── Relay → Client ──────────────────────────────────────────
 
