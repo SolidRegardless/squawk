@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import { relay } from '../services/relay.js';
+import { db } from '../services/db.js';
 import type { ChatMessage, RoomInfo, RoomDetail } from '../../../shared/src/messages.js';
+
+const MAX_HISTORY = 200;
 
 export interface JoinedRoom {
   jid: string;
@@ -26,6 +29,7 @@ interface MucState {
   leaveRoom: (roomJid: string) => void;
   sendMessage: (roomJid: string, body: string) => void;
   clearError: () => void;
+  clearHistory: (jid: string) => Promise<void>;
   init: (domain: string) => () => void;
 }
 
@@ -76,14 +80,49 @@ export const useMucStore = create<MucState>((set, get) => ({
 
   clearError: () => set({ error: null }),
 
+  clearHistory: async (jid) => {
+    await db.messages.where('chatJid').equals(jid).delete();
+    const msgs = { ...get().messages };
+    delete msgs[jid];
+    set({ messages: msgs });
+  },
+
   init: (domain) => {
     set({ conferenceServer: `conference.${domain}` });
+
+    // Load persisted MUC messages from DB
+    db.messages
+      .where('type')
+      .equals('muc')
+      .sortBy('timestamp')
+      .then((rows) => {
+        const allMsgs: Record<string, ChatMessage[]> = {};
+        for (const row of rows) {
+          const msgs = allMsgs[row.chatJid] || [];
+          msgs.push({
+            id: row.id,
+            from: row.from,
+            to: row.to,
+            body: row.body,
+            timestamp: row.timestamp,
+            mine: row.mine,
+            nick: row.nick,
+          });
+          allMsgs[row.chatJid] = msgs;
+        }
+        // Merge with existing (don't overwrite rooms that may have live messages)
+        const current = get().messages;
+        const merged: Record<string, ChatMessage[]> = { ...allMsgs };
+        for (const [jid, msgs] of Object.entries(current)) {
+          if (!merged[jid]) merged[jid] = msgs;
+        }
+        set({ messages: merged });
+      });
 
     return relay.onMessage((msg) => {
       switch (msg.type) {
         case 'error':
           set({ error: msg.message });
-          // Auto-clear after 5 seconds
           setTimeout(() => set({ error: null }), 5000);
           break;
         case 'muc:rooms':
@@ -104,8 +143,30 @@ export const useMucStore = create<MucState>((set, get) => ({
           const msgs = { ...get().messages };
           const existing = msgs[msg.room] || [];
           if (!existing.some((e) => e.id === msg.message.id)) {
-            msgs[msg.room] = [...existing, msg.message];
+            const updated = [...existing, msg.message];
+            msgs[msg.room] = updated;
             set({ messages: msgs });
+
+            // Persist to DB
+            db.messages.put({
+              id: msg.message.id,
+              from: msg.message.from,
+              to: msg.message.to,
+              body: msg.message.body,
+              timestamp: msg.message.timestamp,
+              chatJid: msg.room,
+              type: 'muc',
+              mine: msg.message.mine,
+              nick: msg.message.nick,
+            });
+
+            // Cap to MAX_HISTORY
+            if (updated.length > MAX_HISTORY) {
+              const toDelete = updated.slice(0, updated.length - MAX_HISTORY);
+              db.messages.bulkDelete(toDelete.map((x) => x.id));
+              msgs[msg.room] = updated.slice(-MAX_HISTORY);
+              set({ messages: msgs });
+            }
 
             // Unread
             if (msg.room !== get().activeRoom && !msg.message.mine) {
