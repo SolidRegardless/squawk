@@ -181,6 +181,43 @@
   cursor: not-allowed;
 }
 
+/* Emoji picker */
+.emojiWrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.emojiBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--sq-radius-full);
+  background: var(--sq-bg-elevated);
+  border: 1.5px solid var(--sq-border);
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--sq-transition);
+  line-height: 1;
+}
+
+.emojiBtn:hover {
+  background: var(--sq-bg-deep);
+  border-color: var(--sq-accent-primary);
+  transform: scale(1.05);
+}
+
+.emojiPopup {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  z-index: 100;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.10);
+  border-radius: var(--sq-radius-md);
+  overflow: hidden;
+}
+
 /* Empty state */
 .empty {
   flex: 1;
