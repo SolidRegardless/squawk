@@ -1,4 +1,4 @@
-# 🦜 Squawk
+# ![Squawk](banner.png)
 
 > A modern, cross-platform XMPP client with personality.
 
