@@ -97,6 +97,13 @@ export interface MucSendMessage {
   body: string;
 }
 
+export interface TypingSetMessage {
+  type: 'typing:set';
+  to: string;
+  state: string;
+  isRoom?: boolean;
+}
+
 export type ClientMessage =
   | ConnectMessage
   | DisconnectMessage
@@ -107,7 +114,8 @@ export type ClientMessage =
   | MucListMessage
   | MucJoinMessage
   | MucLeaveMessage
-  | MucSendMessage;
+  | MucSendMessage
+  | TypingSetMessage;
 
 // ── Relay → Client ──────────────────────────────────────────
 
@@ -178,6 +186,13 @@ export interface MucPresenceMessage {
   jid?: string;
 }
 
+export interface TypingMessage {
+  type: 'typing';
+  jid: string;
+  isRoom: boolean;
+  state: 'composing' | 'paused' | 'active' | 'inactive' | 'gone';
+}
+
 export type RelayMessage =
   | StatusMessage
   | ConnectedMessage
@@ -189,7 +204,8 @@ export type RelayMessage =
   | MucRoomsMessage
   | MucJoinedMessage
   | MucMessageMessage
-  | MucPresenceMessage;
+  | MucPresenceMessage
+  | TypingMessage;
 
 // ── Union ───────────────────────────────────────────────────
 
