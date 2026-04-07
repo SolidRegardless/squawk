@@ -201,6 +201,12 @@ export interface ReceiptMessage {
   from: string;
 }
 
+export interface AvatarMessage {
+  type: 'avatar';
+  jid: string;
+  dataUrl: string | null;
+}
+
 export type RelayMessage =
   | StatusMessage
   | ConnectedMessage
@@ -214,7 +220,8 @@ export type RelayMessage =
   | MucMessageMessage
   | MucPresenceMessage
   | TypingMessage
-  | ReceiptMessage;
+  | ReceiptMessage
+  | AvatarMessage;
 
 // ── Union ───────────────────────────────────────────────────
 

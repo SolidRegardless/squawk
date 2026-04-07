@@ -70,7 +70,7 @@ export class XmppManager {
       );
       const result = await conn.xmpp.iqCaller.request(rosterIq);
       const items = result.getChild('query')?.getChildren('item') || [];
-      
+
       this.contacts.clear();
       const contacts: Contact[] = items.map((item: any) => {
         const contact: Contact = {
@@ -86,8 +86,48 @@ export class XmppManager {
 
       console.log(`[xmpp] Roster: ${contacts.length} contacts`);
       this.emit({ type: 'roster', contacts });
+
+      // Fire off vCard fetches for all contacts (non-blocking)
+      for (const contact of contacts) {
+        this.fetchVCard(contact.jid).catch(() => {});
+      }
     } catch (err) {
       console.error('[xmpp] Roster fetch error:', err);
+    }
+  }
+
+  async fetchVCard(jid: string) {
+    const conn = this.getActive();
+    if (!conn) return;
+
+    try {
+      const iq = xml('iq', { type: 'get', to: jid },
+        xml('vCard', { xmlns: 'vcard-temp' })
+      );
+      const result = await conn.xmpp.iqCaller.request(iq);
+      const vcard = result.getChild('vCard', 'vcard-temp')
+        || result.getChild('vCard');
+      if (!vcard) {
+        this.emit({ type: 'avatar', jid, dataUrl: null });
+        return;
+      }
+      const photo = vcard.getChild('PHOTO');
+      if (!photo) {
+        this.emit({ type: 'avatar', jid, dataUrl: null });
+        return;
+      }
+      const type = photo.getChildText('TYPE') || 'image/jpeg';
+      const binval = photo.getChildText('BINVAL');
+      if (!binval) {
+        this.emit({ type: 'avatar', jid, dataUrl: null });
+        return;
+      }
+      const cleanBinval = binval.replace(/\s/g, '');
+      console.log(`[xmpp] Avatar loaded for ${jid}`);
+      this.emit({ type: 'avatar', jid, dataUrl: `data:${type};base64,${cleanBinval}` });
+    } catch {
+      // No vCard or fetch failed — emit null silently
+      this.emit({ type: 'avatar', jid, dataUrl: null });
     }
   }
 
@@ -320,9 +360,12 @@ export class XmppManager {
         this.emitStatus(accountId, 'connected', undefined, jidStr);
         this.emit({ type: 'connected', accountId, jid: jidStr });
         
-        // Send presence and fetch roster
+        // Send presence, fetch roster, and fetch own vCard
         xmpp.send(xml('presence'));
-        setTimeout(() => this.getRoster(), 500);
+        setTimeout(() => {
+          this.getRoster();
+          if (managed.bareJid) this.fetchVCard(managed.bareJid).catch(() => {});
+        }, 500);
       });
 
       // ── Offline ───────────────────────────────────

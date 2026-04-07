@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, type KeyboardEvent } from 'react';
 import type { ChatMessage } from '../../../../shared/src/messages.js';
 import { useChatStore } from '../../stores/chatStore.js';
+import { Avatar } from '../shared/Avatar.tsx';
 import styles from './ChatView.module.css';
 import { EmojiPicker } from './EmojiPicker';
 
@@ -70,9 +71,11 @@ export function ChatView({ target, targetName, messages, onSend, isRoom, partici
     <div className={styles.chatView}>
       {/* Header */}
       <div className={styles.header}>
-        <div className={styles.headerAvatar}>
-          {isRoom ? '#' : targetName[0]?.toUpperCase() ?? '?'}
-        </div>
+        {isRoom ? (
+          <div className={styles.headerAvatar}>#</div>
+        ) : (
+          <Avatar jid={target} name={targetName} size={40} />
+        )}
         <div className={styles.headerInfo}>
           <span className={styles.headerName}>{targetName}</span>
           <span className={styles.headerMeta}>

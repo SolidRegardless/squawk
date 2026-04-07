@@ -1,15 +1,17 @@
 import { create } from 'zustand';
 import { relay } from '../services/relay.js';
-import type { Contact, PresenceInfo } from '../../../shared/src/messages.js';
+import type { Contact } from '../../../shared/src/messages.js';
 
 interface RosterState {
   contacts: Contact[];
+  avatars: Record<string, string>;
   init: () => () => void;
   requestRoster: () => void;
 }
 
 export const useRosterStore = create<RosterState>((set, get) => ({
   contacts: [],
+  avatars: {},
 
   init: () => {
     return relay.onMessage((msg) => {
@@ -22,6 +24,12 @@ export const useRosterStore = create<RosterState>((set, get) => ({
             c.jid === msg.jid ? { ...c, presence: msg.presence } : c,
           );
           set({ contacts });
+          break;
+        }
+        case 'avatar': {
+          if (msg.dataUrl) {
+            set((s) => ({ avatars: { ...s.avatars, [msg.jid]: msg.dataUrl as string } }));
+          }
           break;
         }
       }
