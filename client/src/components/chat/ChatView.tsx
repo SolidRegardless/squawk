@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, type KeyboardEvent } from 'react';
 import type { ChatMessage } from '../../../../shared/src/messages.js';
 import { useChatStore } from '../../stores/chatStore.js';
 import styles from './ChatView.module.css';
+import { EmojiPicker } from './EmojiPicker';
 
 interface Props {
   /** JID or room JID */
@@ -128,6 +129,12 @@ export function ChatView({ target, targetName, messages, onSend, isRoom, partici
           onKeyDown={handleKeyDown}
           placeholder={`Message ${targetName}...`}
           rows={1}
+        />
+        <EmojiPicker
+          onSelect={(emoji) => {
+            setInput((prev) => prev + emoji);
+            inputRef.current?.focus();
+          }}
         />
         <button
           className={styles.sendBtn}
