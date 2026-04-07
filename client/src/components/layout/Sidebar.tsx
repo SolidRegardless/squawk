@@ -1,8 +1,9 @@
-import { useState, useRef, type TouchEvent as ReactTouchEvent } from 'react';
+import { useState, useRef, useCallback, type TouchEvent as ReactTouchEvent } from 'react';
 import { useAccountStore } from '../../stores/accountStore.tsx';
 import { useRosterStore } from '../../stores/rosterStore.js';
 import { useChatStore } from '../../stores/chatStore.js';
 import { useMucStore } from '../../stores/mucStore.js';
+import { notificationService } from '../../services/notifications.js';
 import { PresenceSelector } from '../shared/PresenceSelector.tsx';
 import styles from './Sidebar.module.css';
 
@@ -29,6 +30,19 @@ export function Sidebar({ onDisconnect, onBrowseRooms }: Props) {
   const setActiveRoom = useMucStore((s) => s.setActiveRoom);
   const leaveRoom = useMucStore((s) => s.leaveRoom);
   const mucMessages = useMucStore((s) => s.messages);
+
+  // Notification permission state
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission | 'unsupported'>(() => {
+    if (!('Notification' in window)) return 'unsupported';
+    return Notification.permission;
+  });
+
+  const handleNotifClick = useCallback(async () => {
+    if (notifPermission === 'unsupported' || notifPermission === 'denied') return;
+    if (notifPermission === 'granted') return;
+    const granted = await notificationService.requestPermission();
+    setNotifPermission(granted ? 'granted' : Notification.permission);
+  }, [notifPermission]);
 
   // Swipe state for rooms
   const [swipedRoom, setSwipedRoom] = useState<string | null>(null);
@@ -157,6 +171,21 @@ export function Sidebar({ onDisconnect, onBrowseRooms }: Props) {
         <div className={styles.headerTop}>
           <img src="/logo.png" alt="Squawk" className={styles.logo} />
           <span className={styles.brand}>Squawk</span>
+          {notifPermission !== 'unsupported' && (
+            <button
+              className={`${styles.notifBtn} ${notifPermission === 'granted' ? styles.notifGranted : notifPermission === 'denied' ? styles.notifDenied : ''}`}
+              onClick={handleNotifClick}
+              title={
+                notifPermission === 'granted'
+                  ? 'Notifications enabled'
+                  : notifPermission === 'denied'
+                  ? 'Notifications blocked — allow in browser settings'
+                  : 'Enable notifications'
+              }
+            >
+              {notifPermission === 'granted' ? '🔔' : '🔕'}
+            </button>
+          )}
         </div>
         <div className={styles.accountRow}>
           <div className={styles.accountInfo}>

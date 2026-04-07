@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { relay } from '../services/relay.js';
 import { db } from '../services/db.js';
+import { notificationService } from '../services/notifications.js';
 import type { ChatMessage, RoomInfo, RoomDetail } from '../../../shared/src/messages.js';
 
 const MAX_HISTORY = 200;
@@ -110,7 +111,6 @@ export const useMucStore = create<MucState>((set, get) => ({
           });
           allMsgs[row.chatJid] = msgs;
         }
-        // Merge with existing (don't overwrite rooms that may have live messages)
         const current = get().messages;
         const merged: Record<string, ChatMessage[]> = { ...allMsgs };
         for (const [jid, msgs] of Object.entries(current)) {
@@ -168,12 +168,15 @@ export const useMucStore = create<MucState>((set, get) => ({
               set({ messages: msgs });
             }
 
-            // Unread
+            // Unread + notify if not active
             if (msg.room !== get().activeRoom && !msg.message.mine) {
               const rooms = { ...get().joinedRooms };
               if (rooms[msg.room]) {
                 rooms[msg.room] = { ...rooms[msg.room], unread: (rooms[msg.room].unread || 0) + 1 };
                 set({ joinedRooms: rooms });
+                const roomName = rooms[msg.room].name || msg.room;
+                const sender = msg.message.nick || msg.message.from.split('@')[0];
+                notificationService.notify(roomName, `${sender}: ${msg.message.body}`, { tag: msg.room });
               }
             }
           }

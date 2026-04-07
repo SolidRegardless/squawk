@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { relay } from '../services/relay.js';
 import { db } from '../services/db.js';
+import { notificationService } from '../services/notifications.js';
 import type { ChatMessage } from '../../../shared/src/messages.js';
 
 const MAX_HISTORY = 200;
@@ -99,11 +100,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
             set({ conversations: convos });
           }
 
-          // Increment unread if not active
+          // Increment unread + notify if not active
           if (chatJid !== get().activeChat && !m.mine) {
             const counts = { ...get().unreadCounts };
             counts[chatJid] = (counts[chatJid] || 0) + 1;
             set({ unreadCounts: counts });
+            notificationService.notify(m.from.split('@')[0], m.body, { tag: chatJid });
           }
         }
       }

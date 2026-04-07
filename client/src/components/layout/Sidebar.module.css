@@ -36,6 +36,33 @@
   background-clip: text;
 }
 
+.notifBtn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px 4px;
+  border-radius: var(--sq-radius-sm);
+  opacity: 0.6;
+  transition: opacity var(--sq-transition);
+  line-height: 1;
+}
+
+.notifBtn:hover {
+  opacity: 1;
+}
+
+.notifGranted {
+  opacity: 0.8;
+  cursor: default;
+}
+
+.notifDenied {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .accountRow {
   display: flex;
   align-items: center;
