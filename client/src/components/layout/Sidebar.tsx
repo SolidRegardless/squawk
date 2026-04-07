@@ -15,6 +15,7 @@ interface Props {
 
 export function Sidebar({ onDisconnect, onBrowseRooms }: Props) {
   const [tab, setTab] = useState<Tab>('chats');
+  const [contactSearch, setContactSearch] = useState('');
   const accounts = useAccountStore((s) => s.accounts);
   const activeId = useAccountStore((s) => s.activeAccountId);
   const disconnect = useAccountStore((s) => s.disconnect);
@@ -76,9 +77,16 @@ export function Sidebar({ onDisconnect, onBrowseRooms }: Props) {
     touchStart.current = null;
   };
 
-  // Sort contacts: online first
-  const onlineContacts = contacts.filter((c) => c.presence.show !== 'offline');
-  const offlineContacts = contacts.filter((c) => c.presence.show === 'offline');
+  // Sort contacts: online first, filtered by search
+  const searchQuery = contactSearch.trim().toLowerCase();
+  const filteredContacts = searchQuery
+    ? contacts.filter((c) =>
+        (c.name || '').toLowerCase().includes(searchQuery) ||
+        c.jid.toLowerCase().includes(searchQuery)
+      )
+    : contacts;
+  const onlineContacts = filteredContacts.filter((c) => c.presence.show !== 'offline');
+  const offlineContacts = filteredContacts.filter((c) => c.presence.show === 'offline');
 
   // Build unified "Chats" list: recent 1:1 conversations + rooms with messages, sorted by last activity
   const chatItems: { type: 'dm' | 'room'; jid: string; name: string; lastMsg: string; lastTime: string; unread: number }[] = [];
@@ -165,7 +173,7 @@ export function Sidebar({ onDisconnect, onBrowseRooms }: Props) {
           <button
             key={t}
             className={`${styles.tab} ${tab === t ? styles.activeTab : ''}`}
-            onClick={() => setTab(t)}
+            onClick={() => { setTab(t); if (t !== 'contacts') setContactSearch(''); }}
           >
             {t === 'chats' && '💬'}
             {t === 'rooms' && '🏠'}
@@ -283,6 +291,22 @@ export function Sidebar({ onDisconnect, onBrowseRooms }: Props) {
         {/* ── Contacts tab ───────────────────────────── */}
         {tab === 'contacts' && (
           <div className={styles.list}>
+            <div className={styles.searchWrap}>
+              <span className={styles.searchIcon}>🔍</span>
+              <input
+                className={styles.searchInput}
+                type="text"
+                placeholder="Search contacts…"
+                value={contactSearch}
+                onChange={(e) => setContactSearch(e.target.value)}
+              />
+              <button
+                className={`${styles.searchClear} ${contactSearch ? styles.searchClearVisible : ''}`}
+                onClick={() => setContactSearch('')}
+                aria-label="Clear search"
+                tabIndex={contactSearch ? 0 : -1}
+              >×</button>
+            </div>
             {onlineContacts.length > 0 && (
               <>
                 <div className={styles.groupHeader}>Online — {onlineContacts.length}</div>
@@ -328,6 +352,12 @@ export function Sidebar({ onDisconnect, onBrowseRooms }: Props) {
               <div className={styles.empty}>
                 <span>👤</span>
                 <p>No contacts in roster</p>
+              </div>
+            )}
+            {contacts.length > 0 && filteredContacts.length === 0 && (
+              <div className={styles.empty}>
+                <span>🔍</span>
+                <p>No contacts match</p>
               </div>
             )}
           </div>
