@@ -106,6 +106,13 @@ export interface TypingSetMessage {
   isRoom?: boolean;
 }
 
+export interface HistoryFetchMessage {
+  type: 'history:fetch';
+  jid: string;
+  isRoom: boolean;
+  limit?: number;
+}
+
 export type ClientMessage =
   | ConnectMessage
   | DisconnectMessage
@@ -117,7 +124,8 @@ export type ClientMessage =
   | MucJoinMessage
   | MucLeaveMessage
   | MucSendMessage
-  | TypingSetMessage;
+  | TypingSetMessage
+  | HistoryFetchMessage;
 
 // ── Relay → Client ──────────────────────────────────────────
 

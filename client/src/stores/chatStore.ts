@@ -33,6 +33,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const counts = { ...get().unreadCounts };
       delete counts[jid];
       set({ unreadCounts: counts });
+      // Fetch history if sparse
+      const msgs = get().conversations[jid] || [];
+      if (msgs.length < 10) {
+        relay.send({ type: 'history:fetch', jid, isRoom: false });
+      }
     }
   },
 

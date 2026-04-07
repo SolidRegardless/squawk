@@ -44,6 +44,26 @@
   color: var(--sq-text-disabled);
 }
 
+/* Load more history */
+.loadMore {
+  align-self: center;
+  margin-bottom: 8px;
+  padding: 6px 16px;
+  background: transparent;
+  border: 1px solid var(--sq-border);
+  border-radius: var(--sq-radius-full);
+  color: var(--sq-text-disabled);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--sq-transition);
+}
+
+.loadMore:hover {
+  border-color: var(--sq-accent-primary);
+  color: var(--sq-accent-primary);
+}
+
 /* Messages */
 .messages {
   flex: 1;

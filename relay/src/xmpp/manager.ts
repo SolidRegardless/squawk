@@ -253,6 +253,54 @@ export class XmppManager {
     }
   }
 
+  // ── MAM History ─────────────────────────────────────────────
+
+  async fetchHistory(jid: string, limit: number = 50) {
+    const conn = this.getActive();
+    if (!conn) return;
+
+    console.log(`[xmpp] Fetching MAM history with ${jid} (limit ${limit})...`);
+    const queryId = `mam-${Date.now()}`;
+    const iq = xml('iq', { type: 'set' },
+      xml('query', { xmlns: 'urn:xmpp:mam:2', queryid: queryId },
+        xml('x', { xmlns: 'jabber:x:data', type: 'submit' },
+          xml('field', { var: 'FORM_TYPE' }, xml('value', {}, 'urn:xmpp:mam:2')),
+          xml('field', { var: 'with' }, xml('value', {}, jid))
+        ),
+        xml('set', { xmlns: 'http://jabber.org/protocol/rsm' },
+          xml('max', {}, String(limit))
+        )
+      )
+    );
+
+    try {
+      await conn.xmpp.iqCaller.request(iq);
+    } catch (err) {
+      console.error('[xmpp] MAM history fetch error:', err);
+    }
+  }
+
+  async fetchMucHistory(roomJid: string, limit: number = 50) {
+    const conn = this.getActive();
+    if (!conn) return;
+
+    console.log(`[xmpp] Fetching MAM MUC history for ${roomJid} (limit ${limit})...`);
+    const queryId = `mam-muc-${Date.now()}`;
+    const iq = xml('iq', { to: roomJid, type: 'set' },
+      xml('query', { xmlns: 'urn:xmpp:mam:2', queryid: queryId },
+        xml('set', { xmlns: 'http://jabber.org/protocol/rsm' },
+          xml('max', {}, String(limit))
+        )
+      )
+    );
+
+    try {
+      await conn.xmpp.iqCaller.request(iq);
+    } catch (err) {
+      console.error('[xmpp] MAM MUC history fetch error:', err);
+    }
+  }
+
   async sendMucMessage(roomJid: string, body: string) {
     const conn = this.getActive();
     if (!conn) return;
@@ -456,7 +504,55 @@ export class XmppManager {
     }
   }
 
+  private handleMamResult(result: any, conn: ManagedConnection) {
+    const forwarded = result.getChild('forwarded', 'urn:ietf:params:xml:ns:xmpp-forward');
+    if (!forwarded) return;
+
+    const delay = forwarded.getChild('delay', 'urn:ietf:params:xml:ns:xmpp-delay');
+    const timestamp = delay?.attrs?.stamp || new Date().toISOString();
+
+    const msg = forwarded.getChild('message');
+    if (!msg) return;
+
+    const body = msg.getChildText('body');
+    if (!body) return;
+
+    const msgType = msg.attrs.type;
+    const id = msg.attrs.id || result.attrs.id || `mam-${Date.now()}`;
+
+    if (msgType === 'groupchat') {
+      const from = msg.attrs.from || '';
+      const roomJid = from.split('/')[0];
+      const nick = from.split('/')[1] || '';
+      const mine = nick === conn.nick;
+
+      this.emit({
+        type: 'muc:message',
+        room: roomJid,
+        message: { id, from: roomJid, to: '', body, timestamp, nick, mine },
+      });
+    } else {
+      const from = msg.attrs.from || '';
+      const to = msg.attrs.to || '';
+      const bareFrom = from.split('/')[0];
+      const bareTo = to.split('/')[0];
+      const mine = bareFrom === conn.bareJid;
+
+      this.emit({
+        type: 'message',
+        message: { id, from: bareFrom, to: bareTo, body, timestamp, mine },
+      });
+    }
+  }
+
   private handleMessage(stanza: any, conn: ManagedConnection) {
+    // Check for MAM result wrapper
+    const mamResult = stanza.getChild('result', 'urn:xmpp:mam:2');
+    if (mamResult) {
+      this.handleMamResult(mamResult, conn);
+      return;
+    }
+
     const from = stanza.attrs.from || '';
     const msgType = stanza.attrs.type;
     const body = stanza.getChildText('body');
