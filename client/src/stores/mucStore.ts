@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { relay } from '../services/relay.js';
+import { notificationService } from '../services/notifications.js';
 import type { ChatMessage, RoomInfo, RoomDetail } from '../../../shared/src/messages.js';
 
 export interface JoinedRoom {
@@ -113,6 +114,9 @@ export const useMucStore = create<MucState>((set, get) => ({
               if (rooms[msg.room]) {
                 rooms[msg.room] = { ...rooms[msg.room], unread: (rooms[msg.room].unread || 0) + 1 };
                 set({ joinedRooms: rooms });
+                const roomName = rooms[msg.room].name || msg.room;
+                const sender = msg.message.nick || msg.message.from.split('@')[0];
+                notificationService.notify(roomName, `${sender}: ${msg.message.body}`, { tag: msg.room });
               }
             }
           }

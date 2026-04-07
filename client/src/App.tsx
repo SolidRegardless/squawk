@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAccountStore } from './stores/accountStore.tsx';
+import { notificationService } from './services/notifications.js';
 import { SplashScreen } from './components/splash/SplashScreen.tsx';
 import { AccountSetup } from './components/accounts/AccountSetup.tsx';
 import { AccountManager } from './components/accounts/AccountManager.tsx';
@@ -97,7 +98,10 @@ export function App() {
   // Watch connection status changes — delay transition so user sees all steps go green
   useEffect(() => {
     if (phase === 'connecting' && status === 'connected') {
-      const timer = setTimeout(() => setPhase('connected'), 1200);
+      const timer = setTimeout(() => {
+        setPhase('connected');
+        notificationService.requestPermission();
+      }, 1200);
       return () => clearTimeout(timer);
     }
   }, [phase, status]);

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { relay } from '../services/relay.js';
+import { notificationService } from '../services/notifications.js';
 import type { ChatMessage } from '../../../shared/src/messages.js';
 
 interface ChatState {
@@ -50,6 +51,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
             const counts = { ...get().unreadCounts };
             counts[chatJid] = (counts[chatJid] || 0) + 1;
             set({ unreadCounts: counts });
+            notificationService.notify(m.from.split('@')[0], m.body, { tag: chatJid });
           }
         }
       }
