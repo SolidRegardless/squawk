@@ -178,6 +178,12 @@ export interface MucPresenceMessage {
   jid?: string;
 }
 
+export interface AvatarMessage {
+  type: 'avatar';
+  jid: string;
+  dataUrl: string | null;
+}
+
 export type RelayMessage =
   | StatusMessage
   | ConnectedMessage
@@ -189,7 +195,8 @@ export type RelayMessage =
   | MucRoomsMessage
   | MucJoinedMessage
   | MucMessageMessage
-  | MucPresenceMessage;
+  | MucPresenceMessage
+  | AvatarMessage;
 
 // ── Union ───────────────────────────────────────────────────
 

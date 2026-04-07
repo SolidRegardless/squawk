@@ -4,6 +4,7 @@ import { useRosterStore } from '../../stores/rosterStore.js';
 import { useChatStore } from '../../stores/chatStore.js';
 import { useMucStore } from '../../stores/mucStore.js';
 import { PresenceSelector } from '../shared/PresenceSelector.tsx';
+import { Avatar } from '../shared/Avatar.tsx';
 import styles from './Sidebar.module.css';
 
 type Tab = 'chats' | 'rooms' | 'contacts';
@@ -195,12 +196,13 @@ export function Sidebar({ onDisconnect, onBrowseRooms }: Props) {
                   className={`${styles.listItem} ${isActive ? styles.active : ''}`}
                   onClick={() => item.type === 'dm' ? handleChatSelect(item.jid) : handleRoomSelect(item.jid)}
                 >
-                  <div
-                    className={styles.itemAvatar}
-                    style={item.type === 'room' ? { background: 'linear-gradient(135deg, var(--sq-accent-green), var(--sq-accent-teal))' } : undefined}
-                  >
-                    {item.type === 'room' ? '#' : item.name[0]?.toUpperCase() ?? '?'}
-                  </div>
+                  {item.type === 'room' ? (
+                    <div className={styles.itemAvatar} style={{ background: 'linear-gradient(135deg, var(--sq-accent-green), var(--sq-accent-teal))' }}>
+                      #
+                    </div>
+                  ) : (
+                    <Avatar jid={item.jid} name={item.name} size={38} />
+                  )}
                   <div className={styles.itemContent}>
                     <div className={styles.itemTopRow}>
                       <span className={styles.itemName}>{item.name}</span>
@@ -292,8 +294,8 @@ export function Sidebar({ onDisconnect, onBrowseRooms }: Props) {
                     className={`${styles.listItem} ${activeChat === c.jid ? styles.active : ''}`}
                     onClick={() => handleChatSelect(c.jid)}
                   >
-                    <div className={styles.contactAvatar}>
-                      {(c.name || c.jid)[0]?.toUpperCase()}
+                    <div style={{ position: 'relative', flexShrink: 0 }}>
+                      <Avatar jid={c.jid} name={c.name || c.jid} size={38} />
                       <span className={styles.presenceDot} style={{ background: presenceDot(c.presence.show) }} />
                     </div>
                     <div className={styles.itemContent}>
@@ -313,8 +315,8 @@ export function Sidebar({ onDisconnect, onBrowseRooms }: Props) {
                     className={`${styles.listItem} ${styles.offline} ${activeChat === c.jid ? styles.active : ''}`}
                     onClick={() => handleChatSelect(c.jid)}
                   >
-                    <div className={styles.contactAvatar}>
-                      {(c.name || c.jid)[0]?.toUpperCase()}
+                    <div style={{ position: 'relative', flexShrink: 0 }}>
+                      <Avatar jid={c.jid} name={c.name || c.jid} size={38} />
                       <span className={styles.presenceDot} style={{ background: presenceDot('offline') }} />
                     </div>
                     <div className={styles.itemContent}>
