@@ -56,6 +56,9 @@ wss.on('connection', (ws: WebSocket) => {
         case 'message:send':
           await xmppManager.sendMessage(msg.to, msg.body);
           break;
+        case 'message:send-encrypted':
+          await xmppManager.sendEncryptedMessage(msg.to, msg.body);
+          break;
         case 'muc:list':
           await xmppManager.listRooms(msg.server);
           break;

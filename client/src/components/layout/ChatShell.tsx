@@ -24,6 +24,8 @@ export function ChatShell({ onDisconnect }: Props) {
   const conversations = useChatStore((s) => s.conversations);
   const sendChatMessage = useChatStore((s) => s.sendMessage);
   const chatInit = useChatStore((s) => s.init);
+  const omemoEnabled = useChatStore((s) => s.omemoEnabled);
+  const toggleOmemo = useChatStore((s) => s.toggleOmemo);
 
   const activeRoom = useMucStore((s) => s.activeRoom);
   const joinedRooms = useMucStore((s) => s.joinedRooms);
@@ -70,6 +72,8 @@ export function ChatShell({ onDisconnect }: Props) {
         targetName={contact?.name || activeChat!.split('@')[0]}
         messages={conversations[activeChat!] || []}
         onSend={(body) => sendChatMessage(activeChat!, body)}
+        omemoEnabled={omemoEnabled[activeChat!] ?? false}
+        onToggleOmemo={() => toggleOmemo(activeChat!)}
       />
     );
   } else {

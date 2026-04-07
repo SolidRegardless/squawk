@@ -25,6 +25,8 @@ export interface ChatMessage {
   nick?: string;
   /** Whether this was sent by us */
   mine?: boolean;
+  /** True if the message was OMEMO-encrypted (XEP-0384) */
+  encrypted?: boolean;
 }
 
 export interface RoomInfo {
@@ -75,6 +77,12 @@ export interface MessageSendMessage {
   body: string;
 }
 
+export interface MessageSendEncryptedMessage {
+  type: 'message:send-encrypted';
+  to: string;
+  body: string;
+}
+
 export interface MucListMessage {
   type: 'muc:list';
   server: string;
@@ -104,6 +112,7 @@ export type ClientMessage =
   | RosterGetMessage
   | PresenceSetMessage
   | MessageSendMessage
+  | MessageSendEncryptedMessage
   | MucListMessage
   | MucJoinMessage
   | MucLeaveMessage
