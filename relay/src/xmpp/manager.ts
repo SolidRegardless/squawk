@@ -383,12 +383,51 @@ export class XmppManager {
     }
   }
 
+  async sendTyping(to: string, state: string) {
+    const conn = this.getActive();
+    if (!conn) return;
+    try {
+      await conn.xmpp.send(
+        xml('message', { to, type: 'chat' },
+          xml(state, { xmlns: 'http://jabber.org/protocol/chatstates' })
+        )
+      );
+    } catch (err) {
+      console.error('[xmpp] Send typing error:', err);
+    }
+  }
+
+  async sendMucTyping(room: string, state: string) {
+    const conn = this.getActive();
+    if (!conn) return;
+    try {
+      await conn.xmpp.send(
+        xml('message', { to: room, type: 'groupchat' },
+          xml(state, { xmlns: 'http://jabber.org/protocol/chatstates' })
+        )
+      );
+    } catch (err) {
+      console.error('[xmpp] Send MUC typing error:', err);
+    }
+  }
+
   private handleMessage(stanza: any, conn: ManagedConnection) {
     const from = stanza.attrs.from || '';
     const msgType = stanza.attrs.type;
     const body = stanza.getChildText('body');
     const id = stanza.attrs.id || `rx-${Date.now()}`;
-    
+
+    // Detect chat state notifications (XEP-0085)
+    const CSN_NS = 'http://jabber.org/protocol/chatstates';
+    for (const state of ['composing', 'paused', 'active', 'inactive', 'gone'] as const) {
+      if (stanza.getChild(state, CSN_NS)) {
+        const isRoom = msgType === 'groupchat';
+        const bareFrom = from.split('/')[0];
+        this.emit({ type: 'typing', jid: bareFrom, isRoom, state });
+        break;
+      }
+    }
+
     // Skip empty messages (e.g. chat state notifications)
     if (!body) {
       // Check for MUC subject

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, type KeyboardEvent } from 'react';
 import type { ChatMessage } from '../../../../shared/src/messages.js';
+import { useChatStore } from '../../stores/chatStore.js';
 import styles from './ChatView.module.css';
 
 interface Props {
@@ -17,6 +18,10 @@ export function ChatView({ target, targetName, messages, onSend, isRoom, partici
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isTypingRef = useRef(false);
+
+  const { typingUsers, sendTypingState } = useChatStore();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -31,6 +36,23 @@ export function ChatView({ target, targetName, messages, onSend, isRoom, partici
     if (!body) return;
     onSend(body);
     setInput('');
+    // Clear typing state on send
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    isTypingRef.current = false;
+    sendTypingState(target, 'active', isRoom);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    if (!isTypingRef.current) {
+      isTypingRef.current = true;
+      sendTypingState(target, 'composing', isRoom);
+    }
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    typingTimerRef.current = setTimeout(() => {
+      isTypingRef.current = false;
+      sendTypingState(target, 'paused', isRoom);
+    }, 3000);
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -79,13 +101,20 @@ export function ChatView({ target, targetName, messages, onSend, isRoom, partici
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Typing indicator */}
+      {typingUsers[target] === 'composing' && (
+        <div className={styles.typingIndicator}>
+          ✍️ {targetName} is typing...
+        </div>
+      )}
+
       {/* Input */}
       <div className={styles.inputArea}>
         <textarea
           ref={inputRef}
           className={styles.input}
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           placeholder={`Message ${targetName}...`}
           rows={1}
