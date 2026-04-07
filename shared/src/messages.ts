@@ -25,6 +25,8 @@ export interface ChatMessage {
   nick?: string;
   /** Whether this was sent by us */
   mine?: boolean;
+  /** Delivery status for outgoing 1:1 messages */
+  status?: 'sent' | 'delivered';
 }
 
 export interface RoomInfo {
@@ -178,6 +180,12 @@ export interface MucPresenceMessage {
   jid?: string;
 }
 
+export interface ReceiptMessage {
+  type: 'receipt';
+  id: string;
+  from: string;
+}
+
 export type RelayMessage =
   | StatusMessage
   | ConnectedMessage
@@ -189,7 +197,8 @@ export type RelayMessage =
   | MucRoomsMessage
   | MucJoinedMessage
   | MucMessageMessage
-  | MucPresenceMessage;
+  | MucPresenceMessage
+  | ReceiptMessage;
 
 // ── Union ───────────────────────────────────────────────────
 

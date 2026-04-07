@@ -5,17 +5,19 @@ import type { ChatMessage } from '../../../shared/src/messages.js';
 interface ChatState {
   conversations: Record<string, ChatMessage[]>;
   activeChat: string | null;
+  unreadCounts: Record<string, number>;
+  deliveredIds: Record<string, boolean>;
   setActiveChat: (jid: string | null) => void;
   sendMessage: (to: string, body: string) => void;
   init: () => () => void;
   getUnread: (jid: string) => number;
-  unreadCounts: Record<string, number>;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
   conversations: {},
   activeChat: null,
   unreadCounts: {},
+  deliveredIds: {},
 
   setActiveChat: (jid) => {
     set({ activeChat: jid });
@@ -50,6 +52,21 @@ export const useChatStore = create<ChatState>((set, get) => ({
             const counts = { ...get().unreadCounts };
             counts[chatJid] = (counts[chatJid] || 0) + 1;
             set({ unreadCounts: counts });
+          }
+        }
+      } else if (msg.type === 'receipt') {
+        const { id } = msg;
+        set({ deliveredIds: { ...get().deliveredIds, [id]: true } });
+        // Update status on the matching message
+        const convos = { ...get().conversations };
+        for (const jid of Object.keys(convos)) {
+          const msgs = convos[jid];
+          if (msgs.some((m) => m.id === id)) {
+            convos[jid] = msgs.map((m) =>
+              m.id === id ? { ...m, status: 'delivered' as const } : m
+            );
+            set({ conversations: convos });
+            break;
           }
         }
       }

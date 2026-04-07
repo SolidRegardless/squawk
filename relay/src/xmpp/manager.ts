@@ -122,11 +122,12 @@ export class XmppManager {
       const id = `sq-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
       await conn.xmpp.send(
         xml('message', { to, type: 'chat', id },
-          xml('body', {}, body)
+          xml('body', {}, body),
+          xml('request', { xmlns: 'urn:xmpp:receipts' })
         )
       );
       console.log(`[xmpp] Message sent to ${to}`);
-      
+
       // Echo back to client
       this.emit({
         type: 'message',
@@ -137,6 +138,7 @@ export class XmppManager {
           body,
           timestamp: new Date().toISOString(),
           mine: true,
+          status: 'sent',
         },
       });
     } catch (err) {
@@ -388,7 +390,19 @@ export class XmppManager {
     const msgType = stanza.attrs.type;
     const body = stanza.getChildText('body');
     const id = stanza.attrs.id || `rx-${Date.now()}`;
-    
+
+    // XEP-0184: incoming delivery receipt acknowledgment
+    const received = stanza.getChild('received', 'urn:xmpp:receipts');
+    if (received) {
+      const receiptId = received.attrs.id;
+      if (receiptId) {
+        const bareFrom = from.split('/')[0];
+        console.log(`[xmpp] Receipt for ${receiptId} from ${bareFrom}`);
+        this.emit({ type: 'receipt', id: receiptId, from: bareFrom });
+      }
+      return;
+    }
+
     // Skip empty messages (e.g. chat state notifications)
     if (!body) {
       // Check for MUC subject
@@ -423,6 +437,18 @@ export class XmppManager {
       // 1:1 message
       const bareFrom = from.split('/')[0];
       const mine = bareFrom === conn.bareJid;
+
+      // XEP-0184: auto-send receipt if requested (only for messages from others)
+      if (!mine) {
+        const request = stanza.getChild('request', 'urn:xmpp:receipts');
+        if (request && stanza.attrs.id) {
+          conn.xmpp.send(
+            xml('message', { to: from },
+              xml('received', { xmlns: 'urn:xmpp:receipts', id: stanza.attrs.id })
+            )
+          ).catch(() => {});
+        }
+      }
 
       this.emit({
         type: 'message',
