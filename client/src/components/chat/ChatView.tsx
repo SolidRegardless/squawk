@@ -93,7 +93,17 @@ export function ChatView({ target, targetName, messages, onSend, isRoom, partici
                   <span className={styles.nick}>{msg.nick}</span>
                 )}
                 <p className={styles.body}>{msg.body}</p>
-                <span className={styles.time}>{formatTime(msg.timestamp)}</span>
+                <span className={styles.time}>
+                  {formatTime(msg.timestamp)}
+                  {msg.mine && !isRoom && (
+                    <span
+                      className={`${styles.tick} ${msg.status === 'delivered' ? styles.tickDelivered : ''}`}
+                      title={msg.status === 'delivered' ? 'Delivered' : 'Sent'}
+                    >
+                      {msg.status === 'delivered' ? ' ✓✓' : ' ✓'}
+                    </span>
+                  )}
+                </span>
               </div>
             ))}
           </div>

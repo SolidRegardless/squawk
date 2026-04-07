@@ -11,6 +11,7 @@ interface ChatState {
   activeChat: string | null;
   typingUsers: Record<string, string>;
   unreadCounts: Record<string, number>;
+  deliveredIds: Record<string, boolean>;
   setActiveChat: (jid: string | null) => void;
   sendMessage: (to: string, body: string) => void;
   sendTypingState: (to: string, state: string, isRoom?: boolean) => void;
@@ -24,6 +25,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   activeChat: null,
   typingUsers: {},
   unreadCounts: {},
+  deliveredIds: {},
 
   setActiveChat: (jid) => {
     set({ activeChat: jid });
@@ -133,6 +135,21 @@ export const useChatStore = create<ChatState>((set, get) => ({
             counts[chatJid] = (counts[chatJid] || 0) + 1;
             set({ unreadCounts: counts });
             notificationService.notify(m.from.split('@')[0], m.body, { tag: chatJid });
+          }
+        }
+      } else if (msg.type === 'receipt') {
+        const { id } = msg;
+        set({ deliveredIds: { ...get().deliveredIds, [id]: true } });
+        // Update status on the matching message
+        const convos = { ...get().conversations };
+        for (const jid of Object.keys(convos)) {
+          const msgs = convos[jid];
+          if (msgs.some((m) => m.id === id)) {
+            convos[jid] = msgs.map((m) =>
+              m.id === id ? { ...m, status: 'delivered' as const } : m
+            );
+            set({ conversations: convos });
+            break;
           }
         }
       }
