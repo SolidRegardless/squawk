@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Picker } from '@emoji-mart/react';
+import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
 import styles from './ChatView.module.css';
 
