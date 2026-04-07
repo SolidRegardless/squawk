@@ -72,6 +72,7 @@ export const useMucStore = create<MucState>((set, get) => ({
 
   leaveRoom: (roomJid) => {
     relay.send({ type: 'muc:leave', room: roomJid });
+    db.rooms.delete(roomJid);
     const rooms = { ...get().joinedRooms };
     delete rooms[roomJid];
     const msgs = { ...get().messages };
@@ -95,6 +96,22 @@ export const useMucStore = create<MucState>((set, get) => ({
 
   init: (domain) => {
     set({ conferenceServer: `conference.${domain}` });
+
+    // Load persisted rooms from DB into joinedRooms
+    db.rooms.toArray().then((rows) => {
+      const persisted: Record<string, JoinedRoom> = {};
+      for (const row of rows) {
+        persisted[row.jid] = {
+          jid: row.jid,
+          name: row.name,
+          subject: row.subject,
+          participants: [],
+          unread: 0,
+        };
+      }
+      // Merge: persisted provides the base, any already-in-memory rooms win
+      set({ joinedRooms: { ...persisted, ...get().joinedRooms } });
+    });
 
     // Load persisted MUC messages from DB
     db.messages
@@ -142,6 +159,8 @@ export const useMucStore = create<MucState>((set, get) => ({
             unread: existing?.unread || 0,
           };
           set({ joinedRooms: rooms });
+          // Persist room so it survives browser close
+          db.rooms.put({ jid: msg.room.jid, name: msg.room.name, subject: msg.room.subject });
           break;
         }
         case 'muc:message': {

@@ -248,6 +248,24 @@ export class XmppManager {
     }
   }
 
+  async rejoinRooms(rooms: { jid: string; nick: string }[]) {
+    const conn = this.getActive();
+    if (!conn) return;
+    for (const { jid: roomJid, nick } of rooms) {
+      try {
+        console.log(`[xmpp] Rejoining room ${roomJid} as ${nick}...`);
+        await conn.xmpp.send(
+          xml('presence', { to: `${roomJid}/${nick}` },
+            xml('x', { xmlns: 'http://jabber.org/protocol/muc' })
+          )
+        );
+        this.joinedRooms.add(roomJid);
+      } catch (err) {
+        console.error(`[xmpp] Rejoin room ${roomJid} error:`, err);
+      }
+    }
+  }
+
   async leaveRoom(roomJid: string) {
     const conn = this.getActive();
     if (!conn) return;

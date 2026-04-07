@@ -87,6 +87,17 @@ export const useAccountStore = create<AccountState>((set, get) => {
               connectionError: null,
             });
             clearTimers();
+            // Rejoin any previously joined rooms
+            db.rooms.toArray().then((rooms) => {
+              if (rooms.length > 0) {
+                const account = get().accounts.find((a) => a.id === get().activeAccountId);
+                const nick = account?.username || 'squawk';
+                relay.send({
+                  type: 'rooms:rejoin',
+                  rooms: rooms.map((r) => ({ jid: r.jid, nick })),
+                });
+              }
+            });
             break;
           case 'error': {
             set({

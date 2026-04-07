@@ -85,6 +85,9 @@ wss.on('connection', (ws: WebSocket) => {
             await xmppManager.fetchHistory(msg.jid, msg.limit);
           }
           break;
+        case 'rooms:rejoin':
+          await xmppManager.rejoinRooms(msg.rooms);
+          break;
         default:
           send({ type: 'error', code: 'UNKNOWN_MESSAGE', message: `Unknown message type` });
       }

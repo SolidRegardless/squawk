@@ -121,6 +121,11 @@ export interface HistoryFetchMessage {
   limit?: number;
 }
 
+export interface RoomsRejoinMessage {
+  type: 'rooms:rejoin';
+  rooms: { jid: string; nick: string }[];
+}
+
 export type ClientMessage =
   | ConnectMessage
   | DisconnectMessage
@@ -134,7 +139,8 @@ export type ClientMessage =
   | MucLeaveMessage
   | MucSendMessage
   | TypingSetMessage
-  | HistoryFetchMessage;
+  | HistoryFetchMessage
+  | RoomsRejoinMessage;
 
 // ── Relay → Client ──────────────────────────────────────────
 
