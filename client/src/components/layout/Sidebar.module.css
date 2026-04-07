@@ -323,6 +323,67 @@
 
 
 
+/* Contact search */
+.searchWrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 4px 4px;
+  padding: 7px 10px;
+  background: var(--sq-bg-deep);
+  border: 1.5px solid var(--sq-border);
+  border-radius: var(--sq-radius-md);
+  transition: border-color var(--sq-transition);
+}
+
+.searchWrap:focus-within {
+  border-color: var(--sq-accent-primary);
+}
+
+.searchIcon {
+  font-size: 13px;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.searchInput {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  font-family: var(--sq-font);
+  font-size: 13px;
+  color: var(--sq-text-primary);
+  min-width: 0;
+}
+
+.searchInput::placeholder {
+  color: var(--sq-text-disabled);
+}
+
+.searchClear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--sq-text-disabled);
+  padding: 0 2px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity var(--sq-transition), color var(--sq-transition);
+  pointer-events: none;
+}
+
+.searchClearVisible {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+.searchClear:hover {
+  color: var(--sq-text-primary);
+}
+
 .browseBtn {
   margin: 8px 12px;
   padding: 10px;
