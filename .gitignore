@@ -8,3 +8,5 @@ Thumbs.db
 coverage/
 .vite/
 shared/src/*.js
+client/ios/
+client/android/
