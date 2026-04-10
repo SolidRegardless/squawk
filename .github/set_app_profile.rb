@@ -22,11 +22,14 @@ unless app_target
   exit 1
 end
 
+identity = ENV['CODE_SIGN_IDENTITY'] || 'iPhone Distribution'
+
 app_target.build_configurations.each do |config|
   config.build_settings['CODE_SIGN_STYLE']                = 'Manual'
+  config.build_settings['CODE_SIGN_IDENTITY']             = identity
   config.build_settings['PROVISIONING_PROFILE']           = profile_uuid
   config.build_settings['PROVISIONING_PROFILE_SPECIFIER'] = ''
-  puts "  [#{config.name}] PROVISIONING_PROFILE = #{profile_uuid}"
+  puts "  [#{config.name}] PROVISIONING_PROFILE = #{profile_uuid}, IDENTITY = #{identity}"
 end
 
 project.save
