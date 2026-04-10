@@ -2,6 +2,8 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
+  overflow: hidden;
 }
 
 /* Header */
@@ -10,8 +12,10 @@
   align-items: center;
   gap: 12px;
   padding: 14px 20px;
+  padding-top: max(14px, env(safe-area-inset-top));
   border-bottom: 1px solid var(--sq-border);
   background: var(--sq-bg-surface);
+  flex-shrink: 0;
 }
 
 .backBtn {
@@ -183,8 +187,12 @@
   align-items: flex-end;
   gap: 8px;
   padding: 12px 16px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
   border-top: 1px solid var(--sq-border);
   background: var(--sq-bg-surface);
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .input {
@@ -265,13 +273,14 @@
 }
 
 .emojiPopup {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  right: 0;
-  z-index: 100;
+  position: fixed;
+  bottom: 70px;
+  right: 8px;
+  z-index: 200;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.10);
   border-radius: var(--sq-radius-md);
   overflow: hidden;
+  max-width: calc(100vw - 16px);
 }
 
 /* Empty state */

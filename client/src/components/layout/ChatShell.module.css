@@ -1,6 +1,9 @@
 .shell {
   display: flex;
   height: 100%;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
 }
 
 .main {
@@ -9,12 +12,10 @@
   flex-direction: column;
   background: var(--sq-bg-deep);
   min-width: 0;
+  overflow: hidden;
 }
 
 @media (max-width: 768px) {
-  .shell {
-    position: relative;
-  }
   .main {
     position: absolute;
     inset: 0;
