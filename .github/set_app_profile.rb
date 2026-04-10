@@ -35,12 +35,19 @@ end
 project.save
 puts 'App.xcodeproj saved.'
 
-# Also patch Info.plist with export compliance key
+# Also patch Info.plist with export compliance key + auto build number
 info_plist_path = File.join(File.dirname(proj_path), 'App', 'Info.plist')
 if File.exist?(info_plist_path)
+  # Export compliance
   system("/usr/libexec/PlistBuddy -c 'Add :ITSAppUsesNonExemptEncryption bool false' '#{info_plist_path}' 2>/dev/null || " \
          "/usr/libexec/PlistBuddy -c 'Set :ITSAppUsesNonExemptEncryption false' '#{info_plist_path}'")
   puts "Set ITSAppUsesNonExemptEncryption = false in #{info_plist_path}"
+
+  # Auto-increment build number using git commit count
+  build_number = `git rev-list --count HEAD`.strip
+  build_number = Time.now.strftime('%Y%m%d%H%M') if build_number.empty?
+  system("/usr/libexec/PlistBuddy -c 'Set :CFBundleVersion #{build_number}' '#{info_plist_path}'")
+  puts "Set CFBundleVersion = #{build_number} in #{info_plist_path}"
 else
   puts "Warning: Info.plist not found at #{info_plist_path}"
 end
