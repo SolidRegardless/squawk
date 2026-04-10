@@ -33,9 +33,7 @@ export function ChatView({ target, targetName, messages, onSend, isRoom, partici
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
 
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, [target]);
+  // No auto-focus — let the user tap the input when ready
 
   const handleSend = () => {
     const body = input.trim();

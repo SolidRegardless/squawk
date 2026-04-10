@@ -20,6 +20,7 @@
 /* Header */
 .header {
   padding: 16px 16px 12px;
+  padding-top: max(16px, env(safe-area-inset-top));
   border-bottom: 1px solid var(--sq-border);
 }
 
