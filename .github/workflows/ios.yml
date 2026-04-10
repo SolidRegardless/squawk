@@ -173,7 +173,15 @@ jobs:
           APP_PATH=$(find /tmp/squawk.xcarchive/Products -name '*.app' | head -1)
           echo "App: $APP_PATH"
 
-          # Step 1: Fix CFBundleIdentifier collisions BEFORE signing
+          # Step 1: Set build number in app Info.plist (before signing)
+          BUILD_NUMBER=$(git rev-list --count HEAD)
+          APP_INFO_PLIST="$APP_PATH/Info.plist"
+          if [ -f "$APP_INFO_PLIST" ]; then
+            /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$APP_INFO_PLIST"
+            echo "Set CFBundleVersion = $BUILD_NUMBER"
+          fi
+
+          # Step 2: Fix CFBundleIdentifier collisions BEFORE signing
           find "$APP_PATH" -name '*.framework' -type d | while IFS= read -r fw; do
             plist="$fw/Info.plist"
             if [ -f "$plist" ]; then
