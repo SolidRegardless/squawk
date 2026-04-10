@@ -89,7 +89,7 @@ jobs:
           TEAM_ID: ${{ secrets.TEAM_ID }}
           BUNDLE_ID: ${{ secrets.BUNDLE_ID }}
         run: |
-          set -eo pipefail
+          # Run without xcpretty so full output goes directly to the Actions log
           xcodebuild archive \
             -workspace client/ios/App/App.xcworkspace \
             -scheme App \
@@ -100,12 +100,12 @@ jobs:
             PROVISIONING_PROFILE="$PROVISIONING_PROFILE_UUID" \
             DEVELOPMENT_TEAM="$TEAM_ID" \
             PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
-            2>&1 | tee /tmp/xcodebuild-archive.log | xcpretty; EXIT=${PIPESTATUS[0]}
+            2>&1 || true
           if [ ! -d /tmp/squawk.xcarchive ]; then
-            echo "--- xcodebuild archive FAILED (exit $EXIT) — full log: ---"
-            cat /tmp/xcodebuild-archive.log
-            exit ${EXIT:-1}
+            echo "Archive not produced — xcodebuild failed (see output above)"
+            exit 1
           fi
+          echo "Archive succeeded: /tmp/squawk.xcarchive"
 
       - name: Create ExportOptions.plist
         env:
