@@ -9,6 +9,7 @@ const config: CapacitorConfig = {
   },
   ios: {
     contentInset: 'always',
+    backgroundColor: '#e8f4fd', // matches --sq-bg-deep, fills safe area gap
   },
 };
 

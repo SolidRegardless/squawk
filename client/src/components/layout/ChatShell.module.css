@@ -18,7 +18,10 @@
 @media (max-width: 768px) {
   .main {
     position: absolute;
-    inset: 0;
+    top: env(safe-area-inset-top);
+    left: 0;
+    right: 0;
+    bottom: 0;
     z-index: 5;
     display: none;
   }
