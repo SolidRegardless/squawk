@@ -23,6 +23,7 @@ export function ChatShell({ onDisconnect }: Props) {
   const activeChat = useChatStore((s) => s.activeChat);
   const conversations = useChatStore((s) => s.conversations);
   const sendChatMessage = useChatStore((s) => s.sendMessage);
+  const setActiveChat = useChatStore((s) => s.setActiveChat);
   const chatInit = useChatStore((s) => s.init);
   const omemoEnabled = useChatStore((s) => s.omemoEnabled);
   const toggleOmemo = useChatStore((s) => s.toggleOmemo);
@@ -31,6 +32,7 @@ export function ChatShell({ onDisconnect }: Props) {
   const joinedRooms = useMucStore((s) => s.joinedRooms);
   const mucMessages = useMucStore((s) => s.messages);
   const sendMucMessage = useMucStore((s) => s.sendMessage);
+  const setActiveRoom = useMucStore((s) => s.setActiveRoom);
   const mucInit = useMucStore((s) => s.init);
 
   const [showRoomBrowser, setShowRoomBrowser] = useState(false);
@@ -51,6 +53,11 @@ export function ChatShell({ onDisconnect }: Props) {
 
   let chatContent;
 
+  const handleGoBack = () => {
+    setActiveChat(null);
+    setActiveRoom(null);
+  };
+
   if (hasActiveRoom && joinedRooms[activeRoom!]) {
     const room = joinedRooms[activeRoom!];
     chatContent = (
@@ -62,6 +69,7 @@ export function ChatShell({ onDisconnect }: Props) {
         isRoom
         participants={room.participants}
         subject={room.subject}
+        onBack={handleGoBack}
       />
     );
   } else if (hasActiveChat) {
@@ -74,6 +82,7 @@ export function ChatShell({ onDisconnect }: Props) {
         onSend={(body) => sendChatMessage(activeChat!, body)}
         omemoEnabled={omemoEnabled[activeChat!] ?? false}
         onToggleOmemo={() => toggleOmemo(activeChat!)}
+        onBack={handleGoBack}
       />
     );
   } else {
@@ -86,7 +95,7 @@ export function ChatShell({ onDisconnect }: Props) {
         onDisconnect={onDisconnect}
         onBrowseRooms={() => setShowRoomBrowser(true)}
       />
-      <main className={styles.main}>
+      <main className={`${styles.main}${(hasActiveChat || hasActiveRoom) ? ` ${styles.active}` : ''}`}>
         {chatContent}
       </main>
       {showRoomBrowser && (

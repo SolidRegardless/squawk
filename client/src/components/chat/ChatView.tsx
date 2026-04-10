@@ -17,9 +17,10 @@ interface Props {
   subject?: string;
   omemoEnabled?: boolean;
   onToggleOmemo?: () => void;
+  onBack?: () => void;
 }
 
-export function ChatView({ target, targetName, messages, onSend, isRoom, participants, subject, omemoEnabled, onToggleOmemo }: Props) {
+export function ChatView({ target, targetName, messages, onSend, isRoom, participants, subject, omemoEnabled, onToggleOmemo, onBack }: Props) {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -78,6 +79,11 @@ export function ChatView({ target, targetName, messages, onSend, isRoom, partici
     <div className={styles.chatView}>
       {/* Header */}
       <div className={styles.header}>
+        {onBack && (
+          <button className={styles.backBtn} onClick={onBack} aria-label="Back">
+            ‹
+          </button>
+        )}
         {isRoom ? (
           <div className={styles.headerAvatar}>#</div>
         ) : (
