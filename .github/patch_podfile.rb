@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 # Injects build settings into the existing Capacitor post_install hook.
-# Disables code signing on Pod targets entirely so they don't get
-# a provisioning profile baked into the archive.
-# Unsigned frameworks are valid for App Store builds — Xcode re-signs on export.
+# - Disables code signing on Pod targets (frameworks don't need profiles)
+# - Assigns unique PRODUCT_BUNDLE_IDENTIFIER to each Pod target to prevent
+#   CFBundleIdentifier collision errors on App Store upload.
 
 podfile_path = 'Podfile'
 content = File.read(podfile_path)
@@ -13,14 +13,16 @@ if content.include?('CODE_SIGNING_ALLOWED')
 end
 
 injection = <<~RUBY
-      # CI: disable signing on Pod targets entirely.
-      # Xcode will sign them correctly during export using the App's identity.
+      # CI signing + bundle ID collision fix
       installer.pods_project.targets.each do |target|
         target.build_configurations.each do |config|
-          config.build_settings['CODE_SIGNING_ALLOWED']          = 'NO'
-          config.build_settings['CODE_SIGNING_REQUIRED']         = 'NO'
-          config.build_settings['PROVISIONING_PROFILE']          = ''
+          config.build_settings['CODE_SIGNING_ALLOWED']           = 'NO'
+          config.build_settings['CODE_SIGNING_REQUIRED']          = 'NO'
+          config.build_settings['PROVISIONING_PROFILE']           = ''
           config.build_settings['PROVISIONING_PROFILE_SPECIFIER'] = ''
+          # Give each pod a unique bundle ID based on its target name
+          safe_name = target.name.downcase.gsub(/[^a-z0-9]/, '-').gsub(/-+/, '-').gsub(/^-|-$/, '')
+          config.build_settings['PRODUCT_BUNDLE_IDENTIFIER'] = "com.pods.#{safe_name}"
         end
       end
 RUBY
