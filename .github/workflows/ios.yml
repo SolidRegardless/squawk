@@ -171,26 +171,7 @@ jobs:
           APP_PATH=$(find /tmp/squawk.xcarchive/Products -name '*.app' | head -1)
           echo "App: $APP_PATH"
 
-          # Sign all frameworks inside the app with the distribution identity
-          find "$APP_PATH" -name '*.framework' -type d | while IFS= read -r fw; do
-            echo "Signing: $fw"
-            codesign --force --sign "$CODE_SIGN_IDENTITY" --timestamp "$fw"
-          done
-
-          # Extract entitlements from the provisioning profile
-          PP_PATH="$HOME/Library/MobileDevice/Provisioning Profiles/${PROVISIONING_PROFILE_UUID}.mobileprovision"
-          ENTITLEMENTS_PATH="/tmp/entitlements.plist"
-          security cms -D -i "$PP_PATH" | plutil -extract Entitlements xml1 -o "$ENTITLEMENTS_PATH" -
-          echo "Entitlements extracted to $ENTITLEMENTS_PATH"
-
-          # Sign the app bundle itself using the provisioning profile + entitlements
-          cp "$PP_PATH" "$APP_PATH/embedded.mobileprovision"
-          codesign --force --sign "$CODE_SIGN_IDENTITY" \
-            --entitlements "$ENTITLEMENTS_PATH" \
-            --timestamp \
-            "$APP_PATH"
-
-          # Fix CFBundleIdentifier collisions in embedded framework Info.plists
+          # Step 1: Fix CFBundleIdentifier collisions BEFORE signing
           find "$APP_PATH" -name '*.framework' -type d | while IFS= read -r fw; do
             plist="$fw/Info.plist"
             if [ -f "$plist" ]; then
@@ -201,6 +182,23 @@ jobs:
               /usr/libexec/PlistBuddy -c "Add :CFBundleIdentifier string $new_id" "$plist"
             fi
           done
+
+          # Step 2: Sign frameworks (after plist edits so signature covers updated content)
+          find "$APP_PATH" -name '*.framework' -type d | while IFS= read -r fw; do
+            echo "Signing: $fw"
+            codesign --force --sign "$CODE_SIGN_IDENTITY" --timestamp "$fw"
+          done
+
+          # Step 3: Extract entitlements and sign the app bundle last
+          PP_PATH="$HOME/Library/MobileDevice/Provisioning Profiles/${PROVISIONING_PROFILE_UUID}.mobileprovision"
+          ENTITLEMENTS_PATH="/tmp/entitlements.plist"
+          security cms -D -i "$PP_PATH" | plutil -extract Entitlements xml1 -o "$ENTITLEMENTS_PATH" -
+          echo "Entitlements extracted to $ENTITLEMENTS_PATH"
+          cp "$PP_PATH" "$APP_PATH/embedded.mobileprovision"
+          codesign --force --sign "$CODE_SIGN_IDENTITY" \
+            --entitlements "$ENTITLEMENTS_PATH" \
+            --timestamp \
+            "$APP_PATH"
 
           # Package as IPA
           mkdir -p /tmp/squawk-export/Payload
