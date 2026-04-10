@@ -142,7 +142,7 @@ jobs:
             <key>teamID</key>
             <string>${TEAM_ID}</string>
             <key>signingStyle</key>
-            <string>automatic</string>
+            <string>manual</string>
             <key>stripSwiftSymbols</key>
             <true/>
             <key>uploadBitcode</key>
@@ -151,7 +151,11 @@ jobs:
             <true/>
             <key>compileBitcode</key>
             <false/>
-
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>${BUNDLE_ID}</key>
+              <string>${PROVISIONING_PROFILE_UUID}</string>
+            </dict>
           </dict>
           </plist>
           EOF
