@@ -110,7 +110,7 @@ jobs:
           # xcodeproj (App=Manual+profile, Pods=Automatic). Do NOT override
           # CODE_SIGN_IDENTITY or CODE_SIGN_STYLE globally — it conflicts with
           # Automatic signing on the Pod targets.
-          BUILD_NUMBER=$(git rev-list --count HEAD)
+          BUILD_NUMBER=${{ github.run_number }}
           xcodebuild archive \
             -workspace client/ios/App/App.xcworkspace \
             -scheme App \
@@ -174,7 +174,8 @@ jobs:
           echo "App: $APP_PATH"
 
           # Step 1: Set build number in app Info.plist (before signing)
-          BUILD_NUMBER=$(git rev-list --count HEAD)
+          # Use GitHub run number — guaranteed unique and always increasing
+          BUILD_NUMBER=${{ github.run_number }}
           echo "Build number: $BUILD_NUMBER"
           APP_INFO_PLIST="$APP_PATH/Info.plist"
           echo "Info.plist path: $APP_INFO_PLIST (exists: $(test -f "$APP_INFO_PLIST" && echo yes || echo no))"
