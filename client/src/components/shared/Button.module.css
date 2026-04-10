@@ -47,10 +47,12 @@
 .ghost {
   background: transparent;
   color: var(--sq-text-secondary);
+  border: 1.5px solid var(--sq-border);
 }
 .ghost:hover:not(:disabled) {
   color: var(--sq-text-primary);
   background: var(--sq-bg-elevated);
+  border-color: var(--sq-accent-primary);
 }
 
 .danger {
