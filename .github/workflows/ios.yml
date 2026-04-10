@@ -204,15 +204,17 @@ jobs:
           APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.CONTENT }}
         run: |
           set -eo pipefail
-          API_KEY_PATH="$RUNNER_TEMP/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
-          echo "$APP_STORE_CONNECT_API_KEY_CONTENT" | base64 --decode -o "$API_KEY_PATH"
+          # altool ignores --apiKeyPath and looks in standard dirs instead.
+          # Put the key where it expects it.
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$APP_STORE_CONNECT_API_KEY_CONTENT" | base64 --decode \
+            > ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8
           IPA_PATH="/tmp/squawk-export/Squawk.ipa"
           xcrun altool --upload-app \
             --type ios \
             --file "$IPA_PATH" \
             --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \
-            --apiIssuer "$APP_STORE_CONNECT_API_KEY_ISSUER_ID" \
-            --apiKeyPath "$API_KEY_PATH"
+            --apiIssuer "$APP_STORE_CONNECT_API_KEY_ISSUER_ID"
 
       - name: Cleanup secrets
         if: always()
