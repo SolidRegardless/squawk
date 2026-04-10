@@ -94,6 +94,7 @@ jobs:
             -workspace client/ios/App/App.xcworkspace \
             -scheme App \
             -configuration Release \
+            -destination 'generic/platform=iOS' \
             -archivePath /tmp/squawk.xcarchive \
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="$CODE_SIGN_IDENTITY" \
