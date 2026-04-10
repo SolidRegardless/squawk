@@ -175,11 +175,15 @@ jobs:
 
           # Step 1: Set build number in app Info.plist (before signing)
           BUILD_NUMBER=$(git rev-list --count HEAD)
+          echo "Build number: $BUILD_NUMBER"
           APP_INFO_PLIST="$APP_PATH/Info.plist"
-          if [ -f "$APP_INFO_PLIST" ]; then
-            /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$APP_INFO_PLIST"
-            echo "Set CFBundleVersion = $BUILD_NUMBER"
-          fi
+          echo "Info.plist path: $APP_INFO_PLIST (exists: $(test -f "$APP_INFO_PLIST" && echo yes || echo no))"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$APP_INFO_PLIST" && \
+            echo "Set CFBundleVersion = $BUILD_NUMBER" || \
+            echo "WARNING: Failed to set CFBundleVersion"
+          # Verify
+          ACTUAL=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$APP_INFO_PLIST" 2>/dev/null || echo unknown)
+          echo "Verified CFBundleVersion = $ACTUAL"
 
           # Step 2: Fix CFBundleIdentifier collisions BEFORE signing
           find "$APP_PATH" -name '*.framework' -type d | while IFS= read -r fw; do
