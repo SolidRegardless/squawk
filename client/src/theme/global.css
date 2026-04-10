@@ -66,8 +66,6 @@ body {
   height: 100%;
   width: 100%;
   overflow: hidden;
-  position: fixed;
-  /* position:fixed prevents iOS Safari rubber-band scrolling the whole page */
 }
 
 #root {

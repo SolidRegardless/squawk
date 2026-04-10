@@ -12,7 +12,6 @@
   align-items: center;
   gap: 12px;
   padding: 14px 20px;
-  padding-top: max(14px, env(safe-area-inset-top));
   border-bottom: 1px solid var(--sq-border);
   background: var(--sq-bg-surface);
   flex-shrink: 0;
@@ -187,7 +186,6 @@
   align-items: flex-end;
   gap: 8px;
   padding: 12px 16px;
-  padding-bottom: max(12px, env(safe-area-inset-bottom));
   border-top: 1px solid var(--sq-border);
   background: var(--sq-bg-surface);
   flex-shrink: 0;
