@@ -160,30 +160,36 @@ jobs:
           </plist>
           EOF
 
-      - name: Re-sign embedded frameworks for export
+      - name: Package IPA from archive
         env:
           CODE_SIGN_IDENTITY: ${{ secrets.CODE_SIGN_IDENTITY }}
         run: |
           set -eo pipefail
-          # Frameworks were built with CODE_SIGNING_ALLOWED=NO (unsigned).
-          # exportArchive with manual signing will try to re-sign them and
-          # fails if they're unsigned. Sign them with the distribution identity
-          # (no profile) so export can proceed.
-          find /tmp/squawk.xcarchive -name '*.framework' -type d | while IFS= read -r fw; do
-            echo "Signing framework: $fw"
+          # Instead of xcodebuild -exportArchive (which re-signs all frameworks
+          # and demands profiles for each), we sign the .app ourselves and
+          # package it as an IPA.
+          APP_PATH=$(find /tmp/squawk.xcarchive/Products -name '*.app' | head -1)
+          echo "App: $APP_PATH"
+
+          # Sign all frameworks inside the app with the distribution identity
+          find "$APP_PATH" -name '*.framework' -type d | while IFS= read -r fw; do
+            echo "Signing: $fw"
             codesign --force --sign "$CODE_SIGN_IDENTITY" --timestamp "$fw"
           done
-          echo "Done signing frameworks."
 
-      - name: Export IPA
-        env:
-          BUNDLE_ID: ${{ secrets.BUNDLE_ID }}
-        run: |
-          set -eo pipefail
-          xcodebuild -exportArchive \
-            -archivePath /tmp/squawk.xcarchive \
-            -exportOptionsPlist /tmp/ExportOptions.plist \
-            -exportPath /tmp/squawk-export
+          # Sign the app bundle itself using the provisioning profile
+          PP_PATH=~/Library/MobileDevice/Provisioning\ Profiles/${PROVISIONING_PROFILE_UUID}.mobileprovision
+          codesign --force --sign "$CODE_SIGN_IDENTITY" \
+            --entitlements <(security cms -D -i "$PP_PATH" | plutil -extract Entitlements xml1 -o - -) \
+            --timestamp \
+            "$APP_PATH"
+
+          # Package as IPA
+          mkdir -p /tmp/squawk-export/Payload
+          cp -r "$APP_PATH" /tmp/squawk-export/Payload/
+          cd /tmp/squawk-export
+          zip -r Squawk.ipa Payload
+          echo "IPA created: /tmp/squawk-export/Squawk.ipa"
 
       - name: Upload to TestFlight
         env:
@@ -194,7 +200,7 @@ jobs:
           set -eo pipefail
           API_KEY_PATH="$RUNNER_TEMP/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
           echo "$APP_STORE_CONNECT_API_KEY_CONTENT" | base64 --decode -o "$API_KEY_PATH"
-          IPA_PATH="$(find /tmp/squawk-export -name '*.ipa' | head -1)"
+          IPA_PATH="/tmp/squawk-export/Squawk.ipa"
           xcrun altool --upload-app \
             --type ios \
             --file "$IPA_PATH" \
