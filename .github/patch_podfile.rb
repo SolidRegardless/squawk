@@ -1,27 +1,30 @@
 #!/usr/bin/env ruby
-# Injects CODE_SIGNING_ALLOWED=NO into the existing post_install hook in the Podfile.
-# Capacitor generates a post_install hook already; we can't add a second one.
+# Injects build settings into the existing Capacitor post_install hook.
+# Sets Pod targets to Automatic signing so they get signed with the
+# distribution identity (no provisioning profile) during archive.
+# The App target keeps Manual signing via xcodebuild command-line overrides.
 
 podfile_path = 'Podfile'
 content = File.read(podfile_path)
 
-if content.include?('CODE_SIGNING_ALLOWED')
+if content.include?('CODE_SIGN_STYLE')
   puts 'Podfile already patched, skipping'
   exit 0
 end
 
 injection = <<~RUBY
-      # CI: disable signing on Pod targets so only App target uses the provisioning profile
+      # CI: set Pod targets to Automatic code signing.
+      # They will be signed with the distribution identity only (no profile),
+      # which is correct for embedded frameworks.
       installer.pods_project.targets.each do |target|
         target.build_configurations.each do |config|
-          config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
-          config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
           config.build_settings['CODE_SIGN_STYLE'] = 'Automatic'
+          config.build_settings.delete('PROVISIONING_PROFILE')
+          config.build_settings.delete('PROVISIONING_PROFILE_SPECIFIER')
         end
       end
 RUBY
 
-# Insert our code at the start of the existing post_install block
 patched = content.sub(
   /^(post_install do \|installer\|)/,
   "\\1\n#{injection}"
