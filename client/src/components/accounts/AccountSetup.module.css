@@ -1,9 +1,12 @@
 .container {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  height: 100%;
+  min-height: 100%;
   padding: 24px;
+  padding-bottom: 40px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background: linear-gradient(
     180deg,
     #e8f4fd 0%,
@@ -15,6 +18,7 @@
 .card {
   width: 100%;
   max-width: 440px;
+  margin: auto;
   background: var(--sq-bg-surface);
   border: 1px solid var(--sq-border);
   border-radius: var(--sq-radius-lg);
