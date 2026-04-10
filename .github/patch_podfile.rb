@@ -12,17 +12,17 @@ if content.include?('CODE_SIGNING_ALLOWED')
   exit 0
 end
 
-injection = <<~RUBY
+# Use single-quoted heredoc to avoid Ruby interpolating #{} at script parse time
+injection = <<~'RUBY'
       # CI signing + bundle ID collision fix
       installer.pods_project.targets.each do |target|
+        safe_name = target.name.downcase.gsub(/[^a-z0-9]/, '-').gsub(/-+/, '-').gsub(/^-|-$/, '')
         target.build_configurations.each do |config|
           config.build_settings['CODE_SIGNING_ALLOWED']           = 'NO'
           config.build_settings['CODE_SIGNING_REQUIRED']          = 'NO'
           config.build_settings['PROVISIONING_PROFILE']           = ''
           config.build_settings['PROVISIONING_PROFILE_SPECIFIER'] = ''
-          # Give each pod a unique bundle ID based on its target name
-          safe_name = target.name.downcase.gsub(/[^a-z0-9]/, '-').gsub(/-+/, '-').gsub(/^-|-$/, '')
-          config.build_settings['PRODUCT_BUNDLE_IDENTIFIER'] = "com.pods.#{safe_name}"
+          config.build_settings['PRODUCT_BUNDLE_IDENTIFIER']      = "com.pods.#{safe_name}"
         end
       end
 RUBY
