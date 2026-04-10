@@ -190,6 +190,18 @@ jobs:
             --timestamp \
             "$APP_PATH"
 
+          # Fix CFBundleIdentifier collisions in embedded framework Info.plists
+          find "$APP_PATH" -name '*.framework' -type d | while IFS= read -r fw; do
+            plist="$fw/Info.plist"
+            if [ -f "$plist" ]; then
+              fw_name=$(basename "$fw" .framework)
+              new_id="com.ionic.$(echo $fw_name | tr '[:upper:]' '[:lower:]')"
+              echo "Setting $plist CFBundleIdentifier -> $new_id"
+              /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $new_id" "$plist" 2>/dev/null || \
+              /usr/libexec/PlistBuddy -c "Add :CFBundleIdentifier string $new_id" "$plist"
+            fi
+          done
+
           # Package as IPA
           mkdir -p /tmp/squawk-export/Payload
           cp -r "$APP_PATH" /tmp/squawk-export/Payload/
