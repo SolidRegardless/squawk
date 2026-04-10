@@ -1,26 +1,23 @@
 #!/usr/bin/env ruby
 # Injects build settings into the existing Capacitor post_install hook.
-# Sets Pod targets to Automatic signing so they get signed with the
-# distribution identity (no provisioning profile) during archive.
-# The App target keeps Manual signing via xcodebuild command-line overrides.
+# Disables code signing on Pod targets entirely so the provisioning profile
+# (passed via xcodebuild CLI) only applies to the App target during archive.
 
 podfile_path = 'Podfile'
 content = File.read(podfile_path)
 
-if content.include?('CODE_SIGN_STYLE')
+if content.include?('CODE_SIGNING_ALLOWED')
   puts 'Podfile already patched, skipping'
   exit 0
 end
 
 injection = <<~RUBY
-      # CI: set Pod targets to Automatic code signing.
-      # They will be signed with the distribution identity only (no profile),
-      # which is correct for embedded frameworks.
+      # CI: disable signing on Pod targets so only the App target gets the
+      # provisioning profile during xcodebuild archive.
       installer.pods_project.targets.each do |target|
         target.build_configurations.each do |config|
-          config.build_settings['CODE_SIGN_STYLE'] = 'Automatic'
-          config.build_settings.delete('PROVISIONING_PROFILE')
-          config.build_settings.delete('PROVISIONING_PROFILE_SPECIFIER')
+          config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+          config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
         end
       end
 RUBY

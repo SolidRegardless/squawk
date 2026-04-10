@@ -120,6 +120,9 @@ jobs:
           BUNDLE_ID: ${{ secrets.BUNDLE_ID }}
         run: |
           set -eo pipefail
+          # signingStyle=automatic lets Xcode use the cert+profile already in
+          # the keychain/provisioning profiles folder without trying to assign
+          # profiles to embedded frameworks (which don't support them).
           cat > /tmp/ExportOptions.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
@@ -131,7 +134,7 @@ jobs:
             <key>teamID</key>
             <string>${TEAM_ID}</string>
             <key>signingStyle</key>
-            <string>manual</string>
+            <string>automatic</string>
             <key>stripSwiftSymbols</key>
             <true/>
             <key>uploadBitcode</key>
@@ -140,11 +143,6 @@ jobs:
             <true/>
             <key>compileBitcode</key>
             <false/>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>${BUNDLE_ID}</key>
-              <string>${PROVISIONING_PROFILE_UUID}</string>
-            </dict>
           </dict>
           </plist>
           EOF
