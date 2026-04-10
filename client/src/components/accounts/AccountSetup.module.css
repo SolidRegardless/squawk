@@ -167,12 +167,12 @@
 
 .formActions {
   display: flex;
-  gap: 12px;
-  justify-content: flex-end;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .formActions > * {
-  flex: 1;
+  width: 100%;
 }
 
 .formError {
