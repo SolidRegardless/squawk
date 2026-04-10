@@ -110,6 +110,7 @@ jobs:
           # xcodeproj (App=Manual+profile, Pods=Automatic). Do NOT override
           # CODE_SIGN_IDENTITY or CODE_SIGN_STYLE globally — it conflicts with
           # Automatic signing on the Pod targets.
+          BUILD_NUMBER=$(git rev-list --count HEAD)
           xcodebuild archive \
             -workspace client/ios/App/App.xcworkspace \
             -scheme App \
@@ -118,6 +119,7 @@ jobs:
             -archivePath /tmp/squawk.xcarchive \
             DEVELOPMENT_TEAM="$TEAM_ID" \
             PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
+            CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
             2>&1 || true
           if [ ! -d /tmp/squawk.xcarchive ]; then
             echo "Archive not produced — xcodebuild failed (see output above)"
