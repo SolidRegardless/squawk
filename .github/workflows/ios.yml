@@ -177,10 +177,16 @@ jobs:
             codesign --force --sign "$CODE_SIGN_IDENTITY" --timestamp "$fw"
           done
 
-          # Sign the app bundle itself using the provisioning profile
-          PP_PATH=~/Library/MobileDevice/Provisioning\ Profiles/${PROVISIONING_PROFILE_UUID}.mobileprovision
+          # Extract entitlements from the provisioning profile
+          PP_PATH="$HOME/Library/MobileDevice/Provisioning Profiles/${PROVISIONING_PROFILE_UUID}.mobileprovision"
+          ENTITLEMENTS_PATH="/tmp/entitlements.plist"
+          security cms -D -i "$PP_PATH" | plutil -extract Entitlements xml1 -o "$ENTITLEMENTS_PATH" -
+          echo "Entitlements extracted to $ENTITLEMENTS_PATH"
+
+          # Sign the app bundle itself using the provisioning profile + entitlements
+          cp "$PP_PATH" "$APP_PATH/embedded.mobileprovision"
           codesign --force --sign "$CODE_SIGN_IDENTITY" \
-            --entitlements <(security cms -D -i "$PP_PATH" | plutil -extract Entitlements xml1 -o - -) \
+            --entitlements "$ENTITLEMENTS_PATH" \
             --timestamp \
             "$APP_PATH"
 
