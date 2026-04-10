@@ -149,6 +149,22 @@ jobs:
           </plist>
           EOF
 
+      - name: Sign embedded frameworks
+        env:
+          CODE_SIGN_IDENTITY: ${{ secrets.CODE_SIGN_IDENTITY }}
+        run: |
+          set -eo pipefail
+          # Frameworks in the archive are unsigned (CODE_SIGNING_ALLOWED=NO on Pods).
+          # Sign them with the distribution identity only (no profile) so that
+          # xcodebuild -exportArchive doesn't try to assign a profile to them.
+          find /tmp/squawk.xcarchive -name '*.framework' | while IFS= read -r fw; do
+            echo "Signing: $fw"
+            codesign --force --sign "$CODE_SIGN_IDENTITY" \
+              --timestamp \
+              "$fw"
+          done
+          echo "Frameworks signed."
+
       - name: Export IPA
         run: |
           set -eo pipefail
