@@ -34,3 +34,13 @@ end
 
 project.save
 puts 'App.xcodeproj saved.'
+
+# Also patch Info.plist with export compliance key
+info_plist_path = File.join(File.dirname(proj_path), 'App', 'Info.plist')
+if File.exist?(info_plist_path)
+  system("/usr/libexec/PlistBuddy -c 'Add :ITSAppUsesNonExemptEncryption bool false' '#{info_plist_path}' 2>/dev/null || " \
+         "/usr/libexec/PlistBuddy -c 'Set :ITSAppUsesNonExemptEncryption false' '#{info_plist_path}'")
+  puts "Set ITSAppUsesNonExemptEncryption = false in #{info_plist_path}"
+else
+  puts "Warning: Info.plist not found at #{info_plist_path}"
+end
