@@ -60,12 +60,14 @@ html {
   height: 100%;
   width: 100%;
   overflow: hidden;
+  background: var(--sq-bg-deep); /* fills safe area gap on iOS */
 }
 
 body {
   height: 100%;
   width: 100%;
   overflow: hidden;
+  background: var(--sq-bg-deep);
 }
 
 #root {
