@@ -9,6 +9,9 @@ class RelayConnection {
   private _connected = false;
 
   private getUrl(): string {
+    // VITE_RELAY_URL can be set at build time, e.g. ws://192.168.0.242:3001/ws
+    const envUrl = import.meta.env.VITE_RELAY_URL as string | undefined;
+    if (envUrl) return envUrl;
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     return `${protocol}//${window.location.host}/ws`;
   }

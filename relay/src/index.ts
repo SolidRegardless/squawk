@@ -103,7 +103,9 @@ wss.on('connection', (ws: WebSocket) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`[relay] Squawk relay running on http://localhost:${PORT}`);
-  console.log(`[relay] WebSocket at ws://localhost:${PORT}/ws`);
+const HOST = process.env.RELAY_HOST || '0.0.0.0';
+
+server.listen(PORT, HOST, () => {
+  console.log(`[relay] Squawk relay running on http://${HOST}:${PORT}`);
+  console.log(`[relay] WebSocket at ws://${HOST}:${PORT}/ws`);
 });
