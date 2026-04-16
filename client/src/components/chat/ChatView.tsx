@@ -22,6 +22,7 @@ interface Props {
 
 export function ChatView({ target, targetName, messages, onSend, isRoom, participants, subject, omemoEnabled, onToggleOmemo, onBack }: Props) {
   const [input, setInput] = useState('');
+  const [subjectExpanded, setSubjectExpanded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -91,7 +92,7 @@ export function ChatView({ target, targetName, messages, onSend, isRoom, partici
           <span className={styles.headerName}>{targetName}</span>
           <span className={styles.headerMeta}>
             {isRoom
-              ? `${participants?.length || 0} participants${subject ? ` · ${subject}` : ''}`
+              ? `${participants?.length || 0} participants`
               : target}
           </span>
         </div>
@@ -105,6 +106,20 @@ export function ChatView({ target, targetName, messages, onSend, isRoom, partici
           </button>
         )}
       </div>
+
+      {/* Subject / MOTD banner */}
+      {isRoom && subject && (
+        <div className={`${styles.subjectBanner} ${subjectExpanded ? styles.subjectBannerExpanded : ''}`}>
+          <span className={styles.subjectText}>{subject}</span>
+          <button
+            className={styles.subjectToggle}
+            onClick={() => setSubjectExpanded((v) => !v)}
+            aria-label={subjectExpanded ? 'Collapse topic' : 'Expand topic'}
+          >
+            {subjectExpanded ? '▲' : '▼'}
+          </button>
+        </div>
+      )}
 
       {/* Messages */}
       <div className={styles.messages}>

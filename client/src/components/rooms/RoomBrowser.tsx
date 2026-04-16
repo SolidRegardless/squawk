@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useMucStore } from '../../stores/mucStore.js';
 import { useAccountStore } from '../../stores/accountStore.tsx';
-import { Input } from '../shared/Input.tsx';
 import { Button } from '../shared/Button.tsx';
 import styles from './RoomBrowser.module.css';
 
@@ -59,14 +58,19 @@ export function RoomBrowser({ onClose }: Props) {
         </div>
 
         <div className={styles.serverRow}>
-          <Input
-            className={styles.serverInput}
-            label="Conference Server"
-            placeholder={`conference.${account?.domain || 'your_domain.com'}`}
-            value={server}
-            onChange={(e) => setServer(e.target.value)}
-            hint="The MUC service hostname"
-          />
+          <div className={styles.serverInput}>
+            <label className={styles.serverLabel} htmlFor="conference-server">
+              Conference Server
+            </label>
+            <input
+              id="conference-server"
+              className={styles.serverInputField}
+              placeholder={`conference.${account?.domain || 'your_domain.com'}`}
+              value={server}
+              onChange={(e) => setServer(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            />
+          </div>
           <div className={styles.fetchBtnWrap}>
             <Button onClick={handleSearch} loading={loading} size="sm">
               Fetch

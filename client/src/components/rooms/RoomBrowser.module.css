@@ -54,17 +54,51 @@
 
 .serverRow {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 10px;
   padding: 0 24px 12px;
 }
 
 .fetchBtnWrap {
-  /* No offset needed, flex align-items: center handles alignment */
+  flex-shrink: 0;
 }
 
 .serverInput {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.serverLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sq-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.serverInputField {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--sq-bg-deep);
+  border: 1px solid var(--sq-border);
+  border-radius: var(--sq-radius-sm);
+  font-family: var(--sq-font);
+  font-size: 13px;
+  color: var(--sq-text-primary);
+  transition: border-color var(--sq-transition);
+  box-sizing: border-box;
+}
+
+.serverInputField:focus {
+  outline: none;
+  border-color: var(--sq-accent-primary);
+}
+
+.serverInputField::placeholder {
+  color: var(--sq-text-disabled);
 }
 
 .errorToast {
